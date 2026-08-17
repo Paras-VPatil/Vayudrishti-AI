@@ -1,0 +1,66 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+pip-wheel-metadata/
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+ENV/
+env/
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── Data (large files — track with DVC or Git LFS) ───────────────────────────
+data/raw/
+data/processed/
+*.csv
+*.parquet
+*.nc
+*.h5
+*.hdf5
+*.tif
+*.tiff
+*.geojson
+!mock_data/mock_aqi_features.csv   # Keep the small mock file
+
+# ── Models ────────────────────────────────────────────────────────────────────
+models/**/*.pt
+models/**/*.pkl
+models/**/*.joblib
+models/**/*.onnx
+
+# ── Credentials & secrets ─────────────────────────────────────────────────────
+.env
+*.json
+!schemas/*.json                    # Keep schema files
+service_account*.json
+credentials*.json
+private_key*.json
+
+# ── Google Earth Engine ───────────────────────────────────────────────────────
+.config/earthengine/
+
+# ── OS & editors ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Logs & temp ───────────────────────────────────────────────────────────────
+logs/
+*.log
+tmp/
+temp/
