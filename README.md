@@ -40,6 +40,7 @@ Vayudrishti-AI/
 │   └── fusion/                  # Sensor-satellite fusion models
 │
 └── docs/
+    ├── ROADMAP.md               # End-to-end task roadmap & architecture
     └── satellite_data.md        # Satellite dataset documentation
 ```
 
