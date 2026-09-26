@@ -2,6 +2,12 @@
 clean_cpcb.py
 -------------
 Quality Assurance, cleaning, anomaly filtering, and NAQI calculation for CPCB ground station data.
+
+Usage (CLI)
+-----------
+  python -m src.preprocessing.clean_cpcb \
+      --input  data/raw/ground/cpcb_20240601.parquet \
+      --output data/interim/cpcb_clean.parquet
 """
 
 from __future__ import annotations
@@ -178,3 +184,91 @@ def clean_cpcb_data(
         )
 
     return df
+
+
+def pivot_openaq_long_to_wide(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    OpenAQ v3 API returns data in LONG format (one row per parameter per measurement).
+    This pivots it to WIDE format (one row per station+timestamp with pollutants as columns).
+
+    Input columns:  station_id, station_name, city, latitude, longitude,
+                    timestamp_utc, parameter, value, unit
+    Output columns: station_id, station_name, city, latitude, longitude,
+                    timestamp_utc, pm25, pm10, no2, so2, co, o3
+    """
+    if "parameter" not in df.columns or "value" not in df.columns:
+        # Already in wide format — return as-is
+        return df
+
+    # Normalise parameter names
+    param_map = {
+        "pm25": "pm25", "pm2.5": "pm25", "PM2.5": "pm25",
+        "pm10": "pm10", "PM10": "pm10",
+        "no2":  "no2",  "NO2":  "no2",
+        "so2":  "so2",  "SO2":  "so2",
+        "co":   "co",   "CO":   "co",
+        "o3":   "o3",   "O3":   "o3",
+    }
+    df = df.copy()
+    df["parameter"] = df["parameter"].map(param_map).fillna(df["parameter"])
+
+    # Keep only the 6 pollutants we need
+    df = df[df["parameter"].isin(param_map.values())].copy()
+
+    id_cols = [c for c in ["station_id", "station_name", "city", "latitude", "longitude",
+                            "timestamp_utc"] if c in df.columns]
+
+    wide = df.pivot_table(
+        index=id_cols,
+        columns="parameter",
+        values="value",
+        aggfunc="mean",
+    ).reset_index()
+    wide.columns.name = None
+    return wide
+
+
+# ── CLI entry point ────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    import argparse
+    import logging
+    from glob import glob
+    from pathlib import Path
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    log = logging.getLogger(__name__)
+
+    parser = argparse.ArgumentParser(description="Clean CPCB ground station data")
+    parser.add_argument("--input",  required=True, help="Input parquet file or glob pattern")
+    parser.add_argument("--output", required=True, help="Output parquet file path")
+    args = parser.parse_args()
+
+    import pandas as pd
+
+    # Load (supports glob patterns like data/raw/ground/cpcb_*.parquet)
+    files = sorted(glob(args.input))
+    if not files:
+        raise FileNotFoundError(f"No files matched: {args.input}")
+
+    frames = [pd.read_parquet(f) for f in files]
+    raw_df = pd.concat(frames, ignore_index=True)
+    log.info("Loaded %d rows from %d file(s)", len(raw_df), len(files))
+
+    # Pivot long → wide if needed (OpenAQ format)
+    wide_df = pivot_openaq_long_to_wide(raw_df)
+    log.info("After pivot: %d rows, columns: %s", len(wide_df), list(wide_df.columns))
+
+    # Clean
+    clean_df = clean_cpcb_data(wide_df)
+    log.info("After cleaning: %d rows", len(clean_df))
+
+    # Save
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    clean_df.to_parquet(out_path, index=False, engine="pyarrow")
+    log.info("Saved → %s", out_path)
+
+    # Print missingness summary
+    from src.preprocessing.missingness import get_missingness_report
+    print("\nMissingness report (interim/cpcb_clean):")
+    print(get_missingness_report(clean_df))

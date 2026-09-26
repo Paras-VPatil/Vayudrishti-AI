@@ -2,6 +2,12 @@
 clean_weather.py
 ----------------
 Cleaning, unit conversions, and meteorological variable derivation for ECMWF ERA5-Land reanalysis.
+
+Usage (CLI)
+-----------
+  python -m src.preprocessing.clean_weather \
+      --input  "data/raw/weather/era5_*.parquet" \
+      --output data/interim/weather_clean.parquet
 """
 
 from __future__ import annotations
@@ -86,8 +92,63 @@ def clean_weather_data(df: pd.DataFrame) -> pd.DataFrame:
         invalid_press = (df["surface_pressure"] < 500.0) | (df["surface_pressure"] > 1100.0)
         df.loc[invalid_press, "surface_pressure"] = np.nan
 
-    # Precipitation
+    # Precipitation — rename ERA5 raw column and clip to >= 0
+    if "total_precipitation" in df.columns and "precipitation_1h" not in df.columns:
+        df["precipitation_1h"] = df["total_precipitation"].clip(lower=0.0)
     if "precipitation_1h" in df.columns:
         df["precipitation_1h"] = df["precipitation_1h"].clip(lower=0.0)
 
+    # Derive relative humidity from dewpoint if not yet present
+    if "relative_humidity_2m" not in df.columns:
+        dew_col = next((c for c in ["dewpoint_temperature_2m", "2m_dewpoint_temperature"]
+                        if c in df.columns), None)
+        tmp_col = next((c for c in ["temperature_2m", "2m_temperature", "temperature"]
+                        if c in df.columns), None)
+        if dew_col and tmp_col:
+            # Convert to Celsius first (clean_weather may already have done this)
+            dew_c = df[dew_col].copy()
+            if (dew_c > 150).any():       # still in Kelvin
+                dew_c = dew_c - 273.15
+            tmp_c = df[tmp_col].copy()
+            df["relative_humidity_2m"] = compute_relative_humidity(tmp_c, dew_c)
+
     return df
+
+
+# ── CLI entry point ────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    import argparse
+    import logging
+    from glob import glob
+    from pathlib import Path
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    log = logging.getLogger(__name__)
+
+    parser = argparse.ArgumentParser(description="Clean ERA5 weather data")
+    parser.add_argument("--input",  required=True, help="Input parquet file or glob pattern")
+    parser.add_argument("--output", required=True, help="Output parquet file path")
+    args = parser.parse_args()
+
+    import pandas as pd
+
+    files = sorted(glob(args.input))
+    if not files:
+        raise FileNotFoundError(f"No files matched: {args.input}")
+
+    frames = [pd.read_parquet(f) for f in files]
+    raw_df = pd.concat(frames, ignore_index=True)
+    log.info("Loaded %d rows from %d file(s)", len(raw_df), len(files))
+
+    clean_df = clean_weather_data(raw_df)
+    log.info("After cleaning: %d rows", len(clean_df))
+    log.info("Columns: %s", list(clean_df.columns))
+
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    clean_df.to_parquet(out_path, index=False, engine="pyarrow")
+    log.info("Saved → %s", out_path)
+
+    from src.preprocessing.missingness import get_missingness_report
+    print("\nMissingness report (interim/weather_clean):")
+    print(get_missingness_report(clean_df))
