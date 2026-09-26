@@ -1,0 +1,111 @@
+# ============================================================
+# Vayudrishti-AI — Pipeline Configuration
+# ============================================================
+# ALL tunable parameters live here.
+# Source code must never hard-code thresholds, paths, or dates.
+# ============================================================
+
+# ── Target city ──────────────────────────────────────────────
+city: pune
+
+# ── Bounding box (decimal degrees, WGS-84) ───────────────────
+bbox:
+  lat_min: 18.40
+  lat_max: 18.65
+  lon_min: 73.70
+  lon_max: 74.00
+
+# ── Date range for data acquisition ──────────────────────────
+data:
+  date_start: "2023-01-01"
+  date_end:   "2024-12-31"
+
+# ── Spatial matching ─────────────────────────────────────────
+# Satellite pixel ↔ nearest CPCB station
+spatial_matching:
+  max_radius_km: 25.0              # pixels beyond this radius are discarded
+  pixel_assignment_radius_km: 1.0  # radius used for raster-to-point assignment
+
+# ── Temporal matching ─────────────────────────────────────────
+# Satellite overpass timestamp ↔ nearest ground measurement
+temporal_matching:
+  max_difference_minutes: 60       # pairs with |Δt| > 60 min are discarded
+
+  # Terra MODIS: ~10:30 Local Solar Time (morning overpass)
+  morning_window_lt_start_h: 9
+  morning_window_lt_start_m: 30
+  morning_window_lt_end_h: 11
+  morning_window_lt_end_m: 30
+
+  # Aqua MODIS + Sentinel-5P TROPOMI: ~13:30 Local Solar Time
+  afternoon_window_lt_start_h: 12
+  afternoon_window_lt_start_m: 30
+  afternoon_window_lt_end_h: 14
+  afternoon_window_lt_end_m: 30
+
+# ── Satellite collections (Google Earth Engine IDs) ───────────
+satellite:
+  # MODIS MAIAC AOD (1 km resolution)
+  modis_collection: "MODIS/061/MCD19A2_GRANULES"
+  modis_aod_band:   "Optical_Depth_055"
+
+  # Sentinel-5P TROPOMI
+  tropomi_no2: "COPERNICUS/S5P/OFFL/L3_NO2"
+  tropomi_so2: "COPERNICUS/S5P/OFFL/L3_SO2"
+  tropomi_co:  "COPERNICUS/S5P/OFFL/L3_CO"
+  tropomi_o3:  "COPERNICUS/S5P/OFFL/L3_O3"
+
+  # Quality thresholds
+  modis_qa_min: 2          # keep QA >= 2 (Good and Very Good)
+  tropomi_qa_no2: 0.75     # TROPOMI NO2 qa_value threshold
+  tropomi_qa_others: 0.50  # TROPOMI SO2/CO/O3 qa_value threshold
+
+# ── ERA5 weather ──────────────────────────────────────────────
+era5:
+  collection: "ECMWF/ERA5_LAND/HOURLY"
+  grid_resolution_deg: 0.01   # ~1 km
+
+# ── CPCB / OpenAQ ────────────────────────────────────────────
+cpcb:
+  # OpenAQ v3 API base URL
+  openaq_api_base: "https://api.openaq.org/v3"
+  # Parameters to fetch
+  parameters:
+    - pm25
+    - pm10
+    - no2
+    - so2
+    - co
+    - o3
+  # Station bounding box (same as city bbox above)
+  # Coordinate validation bounds
+  lat_valid_min: 17.5
+  lat_valid_max: 19.5
+  lon_valid_min: 73.0
+  lon_valid_max: 75.0
+
+# ── Physical bounds for QC ────────────────────────────────────
+physical_bounds:
+  pm25:   { min: 0.0, max: 1000.0 }
+  pm10:   { min: 0.0, max: 2000.0 }
+  no2:    { min: 0.0, max: 1000.0 }
+  so2:    { min: 0.0, max: 1000.0 }
+  co:     { min: 0.0, max: 50.0   }
+  o3:     { min: 0.0, max: 800.0  }
+  aod:    { min: 0.0, max: 5.0    }
+  pblh:   { min: 50.0, max: 6000.0 }
+
+# ── File paths ────────────────────────────────────────────────
+paths:
+  raw_ground:    "data/raw/ground"
+  raw_satellite: "data/raw/satellite"
+  raw_weather:   "data/raw/weather"
+  raw_auxiliary: "data/raw/auxiliary"
+  interim:       "data/interim"
+  processed:     "data/processed/pune"
+  models:        "models"
+  experiments:   "experiments"
+  schemas:       "schemas"
+
+# ── Schema versioning ─────────────────────────────────────────
+schema_version: "1.0.0"

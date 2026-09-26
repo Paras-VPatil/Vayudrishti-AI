@@ -1,0 +1,116 @@
+# ============================================================
+# Vayudrishti-AI — Feature Configuration
+# ============================================================
+# Defines the ML target and three feature groups used for:
+#   - Baseline training (features_full)
+#   - Fusion ablation study (all three groups)
+# ============================================================
+
+# ── ML target ────────────────────────────────────────────────
+# RULE: PM2.5 is the ONLY target.
+# AQI is computed AFTER prediction using src/domain/aqi.py.
+# NEVER include aqi_label or aqi_category as a feature.
+target: pm25_ground
+
+# ── Ablation Group A: Weather only ───────────────────────────
+# Baseline without any geospatial or satellite inputs.
+features_weather_only:
+  - temperature_2m
+  - relative_humidity_2m
+  - wind_speed_10m
+  - wind_direction_10m
+  - boundary_layer_height
+  - surface_pressure
+  - precipitation_1h
+  - hour_sin
+  - hour_cos
+  - month_sin
+  - month_cos
+  - wind_u
+  - wind_v
+  - pblh_log
+
+# ── Ablation Group B: Weather + GIS ──────────────────────────
+# Weather + static geospatial features. No satellite.
+features_weather_gis:
+  - temperature_2m
+  - relative_humidity_2m
+  - wind_speed_10m
+  - wind_direction_10m
+  - boundary_layer_height
+  - surface_pressure
+  - precipitation_1h
+  - road_density
+  - building_density
+  - elevation_m
+  - population_density
+  - distance_to_road_km
+  - distance_to_industry_km
+  - hour_sin
+  - hour_cos
+  - month_sin
+  - month_cos
+  - wind_u
+  - wind_v
+  - pblh_log
+
+# ── Ablation Group C: Full (Weather + GIS + Satellite) ───────
+# All features. This is the primary model feature set.
+features_full:
+  # Satellite
+  - aod_550nm
+  - satellite_no2
+  - satellite_so2
+  - satellite_co
+  - satellite_o3
+  - uv_aerosol_index
+  # Missingness indicators (preserve information for GBDT models)
+  - is_aod_missing
+  - is_no2_missing
+  - is_so2_missing
+  - is_co_missing
+  - is_o3_missing
+  # Meteorology
+  - temperature_2m
+  - relative_humidity_2m
+  - wind_speed_10m
+  - wind_direction_10m
+  - boundary_layer_height
+  - surface_pressure
+  - precipitation_1h
+  # Geospatial / static
+  - road_density
+  - building_density
+  - elevation_m
+  - population_density
+  - distance_to_road_km
+  - distance_to_industry_km
+  # Engineered time features
+  - hour_sin
+  - hour_cos
+  - month_sin
+  - month_cos
+  - day_of_year_sin
+  - day_of_year_cos
+  # Engineered meteorological features
+  - wind_u
+  - wind_v
+  - pblh_log
+  - aod_pblh_ratio
+
+# ── Categorical features ──────────────────────────────────────
+categorical_features:
+  - land_use_class
+  - season
+
+# ── Provenance columns (NOT features, keep for debugging) ─────
+provenance_columns:
+  - location_id
+  - station_id
+  - latitude
+  - longitude
+  - timestamp_utc
+  - satellite_timestamp
+  - ground_timestamp
+  - distance_to_station_km
+  - temporal_offset_minutes
