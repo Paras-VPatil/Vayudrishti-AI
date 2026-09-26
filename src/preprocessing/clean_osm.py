@@ -2,6 +2,12 @@
 clean_osm.py
 ------------
 Extraction, spatial rasterization, cleaning, and normalization of OpenStreetMap (OSM) infrastructure and land cover.
+
+Usage (CLI)
+-----------
+  python -m src.preprocessing.clean_osm \
+      --input  data/raw/auxiliary/pune_static_features.parquet \
+      --output data/interim/static_features_clean.parquet
 """
 
 from __future__ import annotations
@@ -56,3 +62,40 @@ def clean_osm_features(df: pd.DataFrame) -> pd.DataFrame:
         df[target_col] = df[target_col].fillna("Cropland")
 
     return df
+
+
+# ── CLI entry point ────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    import argparse
+    import logging
+    from pathlib import Path
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    log = logging.getLogger(__name__)
+
+    parser = argparse.ArgumentParser(description="Clean OSM / static geospatial features")
+    parser.add_argument("--input",  required=True, help="Input parquet file")
+    parser.add_argument("--output", required=True, help="Output parquet file")
+    args = parser.parse_args()
+
+    raw_df = pd.read_parquet(args.input)
+    log.info("Loaded %d rows, columns: %s", len(raw_df), list(raw_df.columns))
+
+    clean_df = clean_osm_features(raw_df)
+    log.info("After cleaning: %d rows", len(clean_df))
+
+    # Validate: no NaN in density columns
+    for col in ["road_density", "building_density"]:
+        if col in clean_df.columns:
+            n_null = clean_df[col].isna().sum()
+            if n_null > 0:
+                log.warning("%s still has %d NaN values after cleaning", col, n_null)
+
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    clean_df.to_parquet(out_path, index=False, engine="pyarrow")
+    log.info("Saved → %s", out_path)
+
+    from src.preprocessing.missingness import get_missingness_report
+    print("\nMissingness report (interim/static_features_clean):")
+    print(get_missingness_report(clean_df))
