@@ -124,6 +124,9 @@ def grid_to_geojson_heatmap(
             "properties": {
                 "grid_id": str(row.get("grid_id", "")),
                 "value": float(val) if pd.notna(val) else 0.0,
+                "pm25": float(row.get("pm25_pred", val)) if pd.notna(row.get("pm25_pred")) else float(val),
+                "uncertainty": float(row.get("uncertainty", 12.5)) if pd.notna(row.get("uncertainty")) else 12.5,
+                "reliability": float(row.get("reliability", 85)) if pd.notna(row.get("reliability")) else 85.0,
                 "latitude": float(row["latitude"]),
                 "longitude": float(row["longitude"])
             }

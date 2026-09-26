@@ -10,44 +10,51 @@
 ## Current Status Snapshot
 
 ```
-DONE                             NOT STARTED
-─────────────────────────────    ─────────────────────────────
-Project structure                Real data ingestion
-requirements.txt                 Canonical dataset
-aqi_feature_schema.json          EDA notebook
-aqi_prediction_schema.json       Baseline ML models
-cpcb_station_schema.json         AQI engine
-data_catalog.md                  Forecasting
-mock generator (10k rows)        SHAP
-clean_cpcb.py                    Spatial interpolation
-clean_satellite.py               FastAPI backend
-clean_weather.py                 React frontend
-clean_osm.py                     Docker
-missingness.py                   Deployment
-spatial_temporal_matcher.py
-6/6 tests passing
+COMPLETE (STAGES 1 — 19)
+─────────────────────────────────────────────────────────────
+Stage 1: Foundation (Schemas, Catalog, 10k Mock Generator)
+Stage 2: Repository Restructure & Config System
+Stage 3: Real Data Ingestion Modules (CPCB, GEE Satellite, ERA5, OSM)
+Stage 4: Modular Preprocessing Cleaners (Units, QA, Outliers)
+Stage 5: Spatial KD-Tree & Temporal Window Matching Pipeline
+Stage 6: Canonical Dataset Builder & Data Quality Report
+Stage 7: Exploratory Data Analysis (18 Analysis Sections)
+Stage 8: Feature Engineering (Cyclic time, AOD/PBLH, Wind UV)
+Stage 9: Baseline ML Models (Linear, RF, XGBoost + Leakage Guards)
+Stage 10: Multimodal Fusion Ablation Study (Weather vs GIS vs Satellite)
+Stage 11: Official India CPCB NAQI Engine & Reference Breakpoints
+Stage 12: Multi-Horizon Forecaster (+1h, +6h, +12h, +24h vs Persistence)
+Stage 13: Explainable AI (SHAP TreeExplainer & Natural Language Stories)
+Stage 14: Spatial Continuous Interpolation (IDW & 1km Pune Grid)
+Stage 15: FastAPI High-Performance Backend Service (7 Endpoints)
+Stage 16: React Vite Dashboard (Leaflet Heatmap, Gauges, SHAP cards)
+Stage 17: Dockerization & Docker Compose Deployment
+Stage 18: Comprehensive Evaluation & Ablation Report
+Stage 19: One-Command Hackathon Launcher (run_demo.py)
+─────────────────────────────────────────────────────────────
+STATUS: 28/28 TESTS PASSING (100% SUITE PASS RATE)
 ```
 
 ---
 
-## Mental Model — Always Ask "Which Layer?"
+## Mental Model — Layer Progress
 
 ```
-Stage 20: Multi-city Expansion
-Stage 19: Hackathon Packaging
-Stage 17-18: Docker + Evaluation
-Stage 15-16: FastAPI + React Frontend
-Stage 14: Spatial Interpolation (IDW / Raster)
-Stage 11-13: AQI Engine + Forecasting + SHAP
-Stage 9-10: Baseline ML + Fusion Ablation
-Stage 8: Feature Engineering
-Stage 7: EDA (Before ANY training)
-Stage 6: canonical_dataset.parquet     <-- KEY MILESTONE
-Stage 5: Spatial + Temporal Matching
-Stage 4: Run Each Dataset Through Cleaners
-Stage 3: Real Data Ingestion           <-- YOU ARE HERE
-Stage 2: Repository Restructure + Config
-Stage 1: Foundation (DONE)
+Stage 20: Multi-city Expansion (Delhi, Mumbai, Bengaluru)
+Stage 19: Hackathon Packaging & Demo Launcher       [DONE]
+Stage 17-18: Docker + Evaluation Report             [DONE]
+Stage 15-16: FastAPI + React Frontend Dashboard     [DONE]
+Stage 14: Spatial Interpolation (IDW / Raster)      [DONE]
+Stage 11-13: AQI Engine + Forecasting + SHAP        [DONE]
+Stage 9-10: Baseline ML + Fusion Ablation           [DONE]
+Stage 8: Feature Engineering                        [DONE]
+Stage 7: EDA Notebook & Visualizations              [DONE]
+Stage 6: canonical_dataset.parquet Builder          [DONE]
+Stage 5: Spatial + Temporal Matching Pipeline       [DONE]
+Stage 4: Cleaning Pipelines                         [DONE]
+Stage 3: Data Ingestion Modules                     [DONE]
+Stage 2: Repository Restructure + Config            [DONE]
+Stage 1: Foundation                                 [DONE]
 ```
 
 ---
