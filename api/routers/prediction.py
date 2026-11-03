@@ -27,8 +27,8 @@ router = APIRouter(tags=["Air Quality & Predictions"])
 
 @router.get("/aqi/current", response_model=CurrentAQIResponse)
 def get_current_aqi(
-    lat: float = Query(18.5204, ge=18.0, le=19.5, description="Latitude (Pune region)"),
-    lon: float = Query(73.8567, ge=73.0, le=75.0, description="Longitude (Pune region)")
+    lat: float = Query(18.5204, ge=15.0, le=23.0, description="Latitude (Maharashtra region)"),
+    lon: float = Query(73.8567, ge=72.0, le=82.0, description="Longitude (Maharashtra region)")
 ):
     """
     Computes real-time fused PM2.5 concentration, India NAQI index,
@@ -96,8 +96,8 @@ def get_current_aqi(
 
 @router.get("/pm25/current", response_model=CurrentPM25Response)
 def get_current_pm25(
-    lat: float = Query(18.5204, ge=18.0, le=19.5),
-    lon: float = Query(73.8567, ge=73.0, le=75.0)
+    lat: float = Query(18.5204, ge=15.0, le=23.0),
+    lon: float = Query(73.8567, ge=72.0, le=82.0)
 ):
     """
     Returns standalone surface PM2.5 prediction value with uncertainty intervals.
@@ -122,8 +122,8 @@ def get_current_pm25(
 
 @router.get("/historical", response_model=HistoricalResponse)
 def get_historical(
-    lat: float = Query(18.5204, ge=18.0, le=19.5),
-    lon: float = Query(73.8567, ge=73.0, le=75.0),
+    lat: float = Query(18.5204, ge=15.0, le=23.0),
+    lon: float = Query(73.8567, ge=72.0, le=82.0),
     hours: int = Query(24, ge=6, le=168)
 ):
     """

@@ -22,5 +22,5 @@ def get_health():
         service="Vayudrishti-AI Hyperlocal Air Quality Intelligence",
         model_loaded=model is not None,
         forecaster_loaded=len(forecasts) > 0,
-        city="Pune, Maharashtra, India"
+        city="Maharashtra, India"
     )

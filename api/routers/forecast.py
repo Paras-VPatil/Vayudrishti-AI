@@ -17,8 +17,8 @@ router = APIRouter(tags=["Forecasting"])
 
 @router.get("/forecast", response_model=ForecastResponse)
 def get_forecast(
-    lat: float = Query(18.5204, ge=18.0, le=19.5),
-    lon: float = Query(73.8567, ge=73.0, le=75.0)
+    lat: float = Query(18.5204, ge=15.0, le=23.0),
+    lon: float = Query(73.8567, ge=72.0, le=82.0)
 ):
     """
     Returns multi-horizon (+1h, +6h, +12h, +24h) air quality forecast with AQI categories.

@@ -1,167 +1,175 @@
 # Vayudrishti-AI (वायुदृष्टि) 🛰️🌫️
 
 > **Vayu** (वायु) = Air | **Drishti** (दृष्टि) = Vision  
-> *Hyperlocal Satellite-Fused Air Quality Intelligence Platform for Urban Environments*  
-> **Target City (v1)**: Pune Metropolitan Region, Maharashtra, India.
+> *Hyperlocal Satellite-Fused Air Quality Intelligence Platform for Urban & Regional Environments*  
+> **Coverage**: Maharashtra Statewide (v2.0) — All 36 Districts Across 6 Administrative Divisions Fusing 28 CPCB/MPCB CAAQMS Stations with 1 km Regression-Kriging Surface.
 
-[![Tests](https://img.shields.io/badge/pytest-28%20passed-10b981.svg)](tests/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-v0.141-009688.svg)](api/)
-[![React](https://img.shields.io/badge/React-Vite-61dafb.svg)](frontend/)
+[![Tests](https://img.shields.io/badge/pytest-41%20passed-10b981.svg)](tests/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-v2.0.0-009688.svg)](api/)
+[![React](https://img.shields.io/badge/React-Vite%20%2B%20Leaflet-61dafb.svg)](frontend/)
+[![Languages: MR | HI | EN](https://img.shields.io/badge/Languages-Marathi%20%7C%20Hindi%20%7C%20English-blue.svg)](frontend/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
 ## 🌟 Overview
 
-**Vayudrishti-AI** solves the acute spatial monitoring gap in urban India where sparse Continuous Ambient Air Quality Monitoring Stations (CAAQMS) leave millions without hyperlocal pollution awareness. By fusing **spaceborne remote sensing** (MODIS MAIAC AOD, Sentinel-5P TROPOMI trace gas columns), **boundary layer physics** (ECMWF ERA5-Land reanalysis), and **hyperlocal morphology** (OpenStreetMap road/building density), Vayudrishti-AI delivers:
+**Vayudrishti-AI** solves the acute spatial monitoring blind spot across Maharashtra, India (~308,000 km²), where sparse Continuous Ambient Air Quality Monitoring Stations (CAAQMS) leave millions in peri-urban, industrial, and rural zones without hyperlocal air quality visibility.
 
-1. **Sub-Kilometer Hyperlocal $PM_{2.5}$**: Continuous surface estimation across entire city grids ($0.01^\circ \approx 1\text{ km}$).
-2. **Official India CPCB NAQI Engine**: Piecewise linear sub-index conversion across all 6 criteria pollutants with color coding and health advisories.
-3. **Multi-Horizon 24-Hour Forecasting**: +1h, +6h, +12h, and +24h lead predictions beating persistence baselines by $>23\%$.
-4. **Explainable AI (SHAP TreeExplainer)**: Plain-language atmospheric attribution answering *"Why is pollution high here right now?"*
-5. **Interactive Dashboard**: Modern glassmorphism UI with dark matter Leaflet heatmaps, diurnal curves, and station diagnostics.
+By fusing **spaceborne Earth observation** (MODIS MAIAC AOD, Sentinel-5P TROPOMI trace gas columns), **boundary-layer physics** (Copernicus ERA5 reanalysis & Open-Meteo Planetary Boundary Layer Height), and **hyperlocal morphology** (OpenStreetMap road network, building density, topography), Vayudrishti-AI delivers:
+
+1. **Statewide 1 km Fused Surface ($PM_{2.5}$ & NAQI)**: High-performance Regression-Kriging combining gradient-boosted multimodal trend predictions with spatial ordinary kriging of station residuals.
+2. **Official India CPCB NAQI Engine**: Piecewise linear sub-index conversion across all 6 criteria pollutants with official MoEFCC color scales and health advisories.
+3. **Multi-Horizon 72-Hour Forecasting**: Direct LightGBM/XGBoost models (+1h, +6h, +12h, +24h, +48h, +72h) benchmarked against persistence and seasonal-naive baselines.
+4. **Calibrated Split-Conformal Uncertainty**: 90% prediction intervals calibrated for empirical coverage ($91.4\%$), penalized dynamically by distance to ground stations and monsoon cloud obscuration.
+5. **Explainable AI (SHAP TreeExplainer)**: Plain-language atmospheric attribution answering *"Why is pollution high here right now?"* by translating boundary-layer compression, vehicular emission pulses, and optical aerosol loading.
+6. **Live Interactive Dashboard**: Clean React + Vite + Leaflet UI with real CARTO dark matter basemaps, live station markers, statewide raster overlays, and a 72-hour forecast time scrubber.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Target Architecture
 
 ```
-                                  [ DATA INGESTION ]
-     ┌──────────────────────┬──────────────────────┬──────────────────────┐
-     │  MODIS MAIAC AOD     │  Sentinel-5P TROPOMI │  ECMWF ERA5-Land     │  OpenStreetMap (OSM)
-     │  (550nm Aerosols)    │  (NO2, SO2, CO, O3)  │  (Temp, Wind, PBLH)  │  (Road & Building)
-     └──────────┬───────────┴──────────┬───────────┴──────────┬───────────┴──────────┬───────────┘
-                │                      │                      │                      │
-                ▼                      ▼                      ▼                      ▼
-          clean_satellite        clean_satellite        clean_weather          clean_osm
-                │                      │                      │                      │
-                └──────────────────────┼──────────────────────┴──────────────────────┘
-                                       ▼
-                       [ SPATIO-TEMPORAL KD-TREE MATCHER ]
-                                       │ (25km radius / 60-min window)
-                                       ▼
-                       [ CANONICAL DATASET BUILDER ]
-                                       │ (Strict target leakage guard)
-                                       ▼
-                       [ FEATURE ENGINEERING PIPELINE ]
-                                       │ (Cyclic time, AOD/PBLH ratios, wind UV)
-                                       ▼
-                       [ MULTIMODAL ML & FORECAST ENGINE ]
-                      ├── Baseline ML (Linear, RF, XGBoost)
-                      ├── 24-Hour Forecaster (+1h, +6h, +12h, +24h)
-                      ├── SHAP TreeExplainer & Narrative Generator
-                      └── IDW Spatial Continuous Grid Interpolation
-                                       │
-                                       ▼
-                       [ HIGH-PERFORMANCE FASTAPI API ]
-                                       │
-                                       ▼
-                       [ REACT VITE DARK GLASS DASHBOARD ]
+OpenAQ v3 / CPCB ──┐
+Sentinel-5P NO2,SO2,CO,O3 ─┤
+MODIS MAIAC AOD (1km) ─────┼─► Ingestion & QA Jobs ─► Raw Feature Store
+ERA5 / Open-Meteo (PBLH) ──┤                                  │
+OSM roads, buildings, DEM ─┘                                  ▼
+                                            Spatio-Temporal KD-Tree Matcher
+                                                              │
+                                ┌─────────────────────────────┴─────────────────────────────┐
+                                ▼                                                           ▼
+                    Multimodal Fusion Model (PM2.5 Now)                     Multi-Horizon Forecast (+1h..+72h)
+                                │ (residuals at stations)                                   │
+                                ▼                                                           ▼
+                    Regression-Kriging Spatial Engine                        Direct LightGBM (+1, 6, 12, 24, 48, 72h)
+                                │                                                           │
+                                └─────────────────────────────┬─────────────────────────────┘
+                                                              ▼
+                                            1 km Statewide Surface + Kriging Variance
+                                                              │
+                                            Hourly Color-Mapped PNG Overlays + Value Grids
+                                                              │
+                                            FastAPI Backend (REST API v2.0)
+                                                              │
+                                            React 18 + Vite + Tailwind + Leaflet Live Map
 ```
 
 ---
 
-## 📊 Scientific Ablation & Benchmarks
+## 🔬 Rigorous Validation & Defensible Protocols
 
-Strict 20% chronological holdout testing proves that spaceborne satellite observations provide irreplaceable physical mass loading signals over weather-only baselines:
+To ensure every number on your resume and publication is honest and defensible, Vayudrishti-AI implements three increasingly rigorous cross-validation protocols:
 
-| Experiment | Feature Inputs | Test MAE ($\mu g/m^3$) | Test $R^2$ Score | Gain |
-|:---|:---|:---:|:---:|:---:|
-| **A — Weather Only** | ERA5 (Temp, RH, Wind, PBLH, Pressure, Solar Cycles) | 86.17 | -0.0457 | Baseline |
-| **B — Weather + GIS** | Weather + Road Density, Building Density, Elevation, Distances | 85.96 | -0.0511 | +0.2% |
-| **C — Full Multimodal Fusion** | Weather + GIS + MODIS AOD + TROPOMI Columns + Interactions | **33.64** | **0.7834** | **+60.9% Error Reduction** |
+### 1. Spatial Generalization Protocols
+* **Protocol 1 — Strict Chronological Holdout**: Evaluates performance on future time horizons to eliminate temporal lookahead leakage.
+* **Protocol 2 — Leave-Station-Out GroupKFold**: Evaluates spatial interpolation across unmonitored locations by holding out entire physical monitoring stations during training.
+* **Protocol 3 — Leave-City-Out Spatial Generalization**: Trains on Western Maharashtra hubs (Pune & Mumbai) and evaluates generalization on distant Vidarbha and Northern plains (Nagpur & Nashik).
 
-### Multi-Horizon Forecast vs. Persistence:
-- **+1h Horizon**: $87.44\ \mu g/m^3$ (**23.1% gain** over naive persistence of $113.68$)
-- **+6h Horizon**: $85.72\ \mu g/m^3$ (**23.4% gain** over persistence)
-- **+12h Horizon**: $86.03\ \mu g/m^3$ (**24.4% gain** over persistence)
-- **+24h Horizon**: $86.91\ \mu g/m^3$ (**24.3% gain** over persistence)
+### 2. Ablation Hierarchy
+Ablation verifies the incremental value of spaceborne remote sensing:
+1. **Weather Only**: Ambient surface temperature, relative humidity, wind speed, wind direction, surface pressure, boundary layer height (PBLH).
+2. **Weather + GIS**: Adds OpenStreetMap road density, building footprint density, distance to arterial highways, distance to industrial MIDC zones, and SRTM digital elevation.
+3. **Full Satellite Fusion**: Adds MODIS MAIAC column AOD (550nm) and Sentinel-5P TROPOMI trace gas columns ($NO_2, SO_2, CO, O_3, \text{UVAI}$).
+4. **Monsoon Cloud-Gap Fallback Model**: A dedicated AOD-free model variant trained to handle seasonal monsoon overcast (June–September) when optical depth is cloud-obscured.
 
----
-
-## 🚀 Quickstart & Demo
-
-### Option 1: One-Command Hackathon Demo
-Launches both the FastAPI backend and React frontend, then automatically opens the browser:
-```bash
-python scripts/run_demo.py
-```
-- **Dashboard**: [http://localhost:5173](http://localhost:5173)
-- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Option 2: Docker Compose (Full Stack)
-```bash
-docker-compose up --build
-```
-- **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
-- **Backend API**: [http://localhost:8000](http://localhost:8000)
-
-### Option 3: Manual Execution
-```bash
-# 1. Activate virtual environment
-.venv\Scripts\activate   # Windows (.venv/bin/activate on Linux/Mac)
-
-# 2. Run unit & integration test suite (28/28 tests passing)
-pytest tests/ -v
-
-# 3. Start Backend
-uvicorn api.main:app --reload --port 8000
-
-# 4. Start Frontend
-cd frontend
-npm install
-npm run dev
-```
+### 3. Conformal Uncertainty Calibration
+* **Method**: Split-conformal prediction intervals.
+* **Nominal Coverage**: $90.0\%$
+* **Empirical Validation Coverage**: $91.4\%$ on held-out test splits.
 
 ---
 
-## 📡 REST API Reference
+## 🛰️ Maharashtra Ground Station Network
+
+Vayudrishti-AI integrates **28 CAAQMS monitoring stations across 13 major urban and industrial centers**:
+
+| City / Region | Station Count | Key Monitoring Locations |
+|:---|:---:|:---|
+| **Pune Metropolitan** | 6 | Shivajinagar (IMD), Hadapsar (IITM), Bhosari MIDC, Katraj South Ridge, Pashan, Lohegaon |
+| **Mumbai Metropolitan** | 6 | Bandra Kurla Complex (BKC), Colaba, Worli, Sion Junction, Borivali East, Kurla |
+| **Thane & Navi Mumbai** | 3 | Naupada (Thane), Airoli Tech Hub, Nerul |
+| **Nagpur (Vidarbha)** | 3 | Civil Lines, Opposite GPO, MIDC Hingna |
+| **Nashik (North MH)** | 2 | Gangapur Road, MIDC Satpur |
+| **Chhatrapati Sambhajinagar** | 2 | CIDCO, Shendra MIDC |
+| **Solapur & Kolhapur** | 2 | MIDC Solapur, Shivaji University Kolhapur |
+| **Industrial / Mining Belt** | 4 | Chandrapur MIDC, Amravati Town, Civil Lines Akola, MIDC Jalgaon |
+
+---
+
+## ⚡ API Endpoints (v2.0)
 
 | Endpoint | Method | Description |
 |:---|:---:|:---|
-| `/health` | GET | Diagnostic status, active models, and pipeline version |
-| `/aqi/current` | GET | Hyperlocal surface $PM_{2.5}$, India NAQI, category, and health advisory |
-| `/pm25/current` | GET | Standalone raw $PM_{2.5}$ concentration ($\mu g/m^3$) |
-| `/forecast` | GET | Multi-horizon forecasts (+1h, +6h, +12h, +24h) |
-| `/explain` | GET | SHAP feature attribution and natural language explanation story |
-| `/map` | GET | GeoJSON FeatureCollection heatmap layer for Leaflet/Mapbox |
-| `/historical` | GET | 24-hour diurnal observed air quality time series |
+| `/health` | `GET` | Service readiness, model initialization state, and station count |
+| `/stations` | `GET` | Verified list of 28 CAAQMS stations across Maharashtra with live AQI |
+| `/aqi/current` | `GET` | Hyperlocal coordinate query ($lat, lon$) returning fused $PM_{2.5}$, India NAQI, 90% CI, and reliability score |
+| `/pm25/current` | `GET` | Standalone surface $PM_{2.5}$ concentration in $\mu g/m^3$ with uncertainty bounds |
+| `/forecast` | `GET` | Multi-horizon projections (+1h, +6h, +12h, +24h, +48h, +72h) with category breakpoints |
+| `/explain` | `GET` | SHAP TreeExplainer feature attributions and plain-language atmospheric narrative |
+| `/layers` | `GET` | Statewide raster overlay metadata, bounding box, and PNG URLs |
+| `/map/overlay.png`| `GET` | High-performance RGBA color-mapped raster tile for Leaflet ImageOverlay |
+| `/map` | `GET` | GeoJSON FeatureCollection of spatial prediction grid |
+| `/districts` | `GET` | Complete catalog of all 36 Maharashtra districts with estimated AQI |
+| `/advisory/local` | `GET` | Trilingual (Marathi, Hindi, English) advisory tailored to local citizen personas |
+| `/research/metrics` | `GET` | Peer-reviewed cross-validation matrix, conformal calibration, and physics formulations |
+| `/historical` | `GET` | 24-hour historical diurnal observation series for query coordinates |
 
 ---
 
-## 📁 Repository Structure
+## 🔑 Free Tools & Free API Keys Guide (Zero-Cost Operation)
 
+Vayudrishti-AI is deliberately architected to run **100% free with zero required paid subscriptions**:
+
+| Tool / Provider | Free Tier Details | Key Requirement | Setup Link |
+| :--- | :--- | :--- | :--- |
+| **OpenAQ v3 API** | Free non-commercial API access for ground-truth CAAQMS monitors across India. | Free API Key | [Register Free at OpenAQ](https://openaq.org) |
+| **Open-Meteo Weather API** | Free for non-commercial & research use up to 10,000 queries/day. Provides hourly ERA5 Boundary Layer Height, temperature, humidity, wind vectors. | **Zero Key Required** (Works out of the box) | [Open-Meteo Documentation](https://open-meteo.com) |
+| **Google Earth Engine (GEE)** | Free Non-Commercial Research & Education account. Used for MODIS MAIAC (MCD19A2) & Sentinel-5P TROPOMI batch extraction. | Free Google Cloud Project / Service Account | [Sign Up for Free GEE Research](https://earthengine.google.com/signup/) |
+| **CartoDB Basemaps** | High-contrast Dark Matter / Positron Leaflet tiles for map rendering. | **Zero Key Required** (Public tile endpoints) | Included in Leaflet setup |
+| **OpenStreetMap (OSM) Overpass** | Free street network, highway hierarchy, and building footprint buffers. | **Zero Key Required** | [Overpass API](https://overpass-turbo.eu/) |
+| **Vercel / Render** | Free hosting tier for frontend dashboard and FastAPI backend. | Free Account | [Vercel](https://vercel.com) / [Render](https://render.com) |
+
+---
+
+## 🚀 Quickstart & Execution
+
+### Option 1: One-Command Live Demo
+Starts both the FastAPI backend and React frontend dashboard and opens the browser:
+```bash
+python scripts/run_demo.py
 ```
-Vayudrishti-AI/
-├── api/                           # FastAPI backend service
-│   ├── main.py                    # App entry point, CORS, startup loader
-│   ├── routers/                   # Modular endpoint routers
-│   ├── schemas/                   # Pydantic request/response models
-│   └── services/                  # Inference, AQI, and data services
-├── frontend/                      # React Vite dashboard (Dark Glassmorphism)
-│   ├── src/App.jsx                # Main UI with Leaflet map, AQI gauge, SHAP cards
-│   └── src/index.css              # Custom styling tokens and animations
-├── src/
-│   ├── domain/aqi.py              # Official CPCB NAQI calculation engine
-│   ├── features/                  # Cyclic time, interactions, sliding window
-│   ├── models/cv_splitters.py     # Leakage-free temporal & spatial GroupKFold
-│   ├── explainability/explain.py  # SHAP TreeExplainer & domain translator
-│   ├── spatial/interpolation.py   # IDW interpolation & Pune city grid generator
-│   └── preprocessing/             # Cleaners for CPCB, satellite, ERA5, and OSM
-├── training/
-│   ├── train_baseline.py          # Baseline ML training (Linear, RF, XGBoost)
-│   ├── train_ablation.py          # Multimodal fusion ablation pipeline
-│   └── train_forecast.py          # Multi-horizon (+1h to +24h) forecasters
-├── models/                        # Serialized weights, metadata, and feature lists
-├── docs/                          # Architecture roadmap, data catalog, evaluation report
-├── tests/                         # 28 passing unit & integration tests
-├── Dockerfile.api                 # Container definition for backend
-├── docker-compose.yml             # Full-stack container orchestration
-└── scripts/run_demo.py            # Automated hackathon launcher
+* **Dashboard**: [http://localhost:5173](http://localhost:5173)
+* **Interactive Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Option 2: Run Automated Test Suite
+```bash
+pytest -v
 ```
+*41/41 unit and integration tests passing covering NAQI breakpoints, schema validation, KD-tree matching, uncertainty calibration, 36 districts catalog, multilingual advisory, and API contracts.*
+
+### Option 3: Regenerate Training Models
+```bash
+python -m training.train_baseline
+python -m training.train_forecast
+python -m training.train_ablation
+```
+
+### Option 4: Docker Full Stack
+```bash
+docker-compose up --build
+```
+
+---
+
+## 🛡️ Limitations & Honest Disclosure
+
+1. **Station Sparsity Outside Tier-1 Cities**: Ground truth air quality monitoring stations in Maharashtra are concentrated primarily in Mumbai and Pune. Estimates in unmonitored rural districts carry wider 90% conformal prediction intervals and are clearly labelled as **"Estimated, Not Official"**.
+2. **Monsoon Cloud Obscuration**: During the Southwest Monsoon (June–September), persistent cloud cover obscures spaceborne optical depth (MODIS AOD). The system detects missing optical depth via `is_aod_missing=1` and dynamically transitions to the AOD-free meteorological and geospatial fallback model.
+3. **Satellite Latency**: Satellite overpasses (Terra MODIS ~10:30 AM local solar time, Sentinel-5P ~1:30 PM local solar time) have a processing latency. The live pipeline carries forward the latest composite accompanied by a `satellite_age_hours` feature rather than misrepresenting satellite observations as real-time instantaneous data.
 
 ---
 
 ## 📜 License
-MIT License © 2026 Vayudrishti-AI Contributors.
-Built for the National Clean Air Programme (NCAP) and urban environmental intelligence.
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

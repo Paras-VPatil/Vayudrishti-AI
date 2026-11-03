@@ -13,7 +13,14 @@ Provides:
 
 from typing import Dict, Any, List, Optional, Tuple
 import os
+import sys
 import json
+import tempfile
+from typing import Dict, Any, List, Optional, Tuple
+
+if "MPLCONFIGDIR" not in os.environ:
+    os.environ["MPLCONFIGDIR"] = os.path.join(tempfile.gettempdir(), "mpl")
+
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -60,21 +67,25 @@ FEATURE_DESCRIPTIONS = {
 
 class ModelExplainer:
     """
-    SHAP-based explainer for air quality models.
+    SHAP-based explainer for air quality models with lazy initialization.
     """
 
     def __init__(self, model: Any, feature_names: Optional[List[str]] = None):
         self.model = model
         self.feature_names = feature_names
-        self.explainer = None
-        if HAS_SHAP:
+        self._explainer = None
+
+    @property
+    def explainer(self):
+        if self._explainer is None and HAS_SHAP and self.model is not None:
             try:
-                self.explainer = shap.TreeExplainer(model)
+                self._explainer = shap.TreeExplainer(self.model)
             except Exception:
                 try:
-                    self.explainer = shap.Explainer(model)
+                    self._explainer = shap.Explainer(self.model)
                 except Exception:
-                    self.explainer = None
+                    self._explainer = None
+        return self._explainer
 
     def explain_dataset(self, X: pd.DataFrame) -> Any:
         """Computes SHAP values for an entire dataframe."""

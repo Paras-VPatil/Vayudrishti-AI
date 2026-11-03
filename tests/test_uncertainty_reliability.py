@@ -61,7 +61,7 @@ def test_nearest_station_comparison():
         lat=18.5314,  # Exactly at Shivajinagar
         lon=73.8446
     )
-    assert comp["nearest_station_name"] == "Shivajinagar (IMD)"
+    assert "Shivajinagar" in comp["nearest_station_name"]
     assert comp["distance_to_station_km"] < 1.0
     assert "blind_spot_insight" in comp
 

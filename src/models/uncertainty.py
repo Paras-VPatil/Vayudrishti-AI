@@ -25,16 +25,27 @@ import numpy as np
 import pandas as pd
 
 
-# Known CPCB CAAQMS Ground Stations in Pune
+# Official CPCB CAAQMS Ground Stations across Maharashtra
+try:
+    from src.ingestion.openaq import MAHARASHTRA_STATIONS_CATALOG
+    OFFICIAL_MAHARASHTRA_STATIONS = [
+        {"name": s["name"], "lat": s["latitude"], "lon": s["longitude"], "base_pm25": 85.0, "city": s.get("city", "Maharashtra")}
+        for s in MAHARASHTRA_STATIONS_CATALOG
+    ]
+except Exception:
+    OFFICIAL_MAHARASHTRA_STATIONS = []
+
 OFFICIAL_PUNE_STATIONS = [
-  {"name": "Shivajinagar (IMD)", "lat": 18.5314, "lon": 73.8446, "base_pm25": 92.0},
-  {"name": "Hadapsar (IITM)", "lat": 18.5089, "lon": 73.9260, "base_pm25": 115.0},
-  {"name": "Bhosari (MIDC)", "lat": 18.6277, "lon": 73.8488, "base_pm25": 128.0},
-  {"name": "Katraj (South Ridge)", "lat": 18.4575, "lon": 73.8677, "base_pm25": 58.0},
-  {"name": "MIT Kothrud", "lat": 18.5074, "lon": 73.8077, "base_pm25": 68.0},
-  {"name": "Pashan (IITM)", "lat": 18.5390, "lon": 73.8050, "base_pm25": 62.0},
-  {"name": "Lohegaon Airport", "lat": 18.5822, "lon": 73.9197, "base_pm25": 84.0},
+    {"name": "Shivajinagar (IMD)", "lat": 18.5314, "lon": 73.8446, "base_pm25": 92.0, "city": "Pune"},
+    {"name": "Hadapsar (IITM)", "lat": 18.5089, "lon": 73.9260, "base_pm25": 115.0, "city": "Pune"},
+    {"name": "Bhosari (MIDC)", "lat": 18.6277, "lon": 73.8488, "base_pm25": 128.0, "city": "Pune"},
+    {"name": "Katraj (South Ridge)", "lat": 18.4575, "lon": 73.8677, "base_pm25": 58.0, "city": "Pune"},
+    {"name": "MIT Kothrud", "lat": 18.5074, "lon": 73.8077, "base_pm25": 68.0, "city": "Pune"},
+    {"name": "Pashan (IITM)", "lat": 18.5390, "lon": 73.8050, "base_pm25": 62.0, "city": "Pune"},
+    {"name": "Lohegaon Airport", "lat": 18.5822, "lon": 73.9197, "base_pm25": 84.0, "city": "Pune"},
 ]
+
+ALL_STATIONS = OFFICIAL_MAHARASHTRA_STATIONS if OFFICIAL_MAHARASHTRA_STATIONS else OFFICIAL_PUNE_STATIONS
 
 
 def calculate_prediction_interval(
@@ -135,12 +146,13 @@ def calculate_data_reliability_score(
 def find_nearest_official_station(lat: float, lon: float) -> Dict[str, Any]:
     """
     Finds nearest official CAAQMS station and calculates the microclimate delta.
-    Directly demonstrates the 'Monitoring Blind Spot' problem.
+    Directly demonstrates the 'Monitoring Blind Spot' problem across Maharashtra.
     """
     min_dist = float("inf")
-    nearest = OFFICIAL_PUNE_STATIONS[0]
+    station_list = ALL_STATIONS if ALL_STATIONS else OFFICIAL_PUNE_STATIONS
+    nearest = station_list[0]
 
-    for stn in OFFICIAL_PUNE_STATIONS:
+    for stn in station_list:
         # Haversine-like flat approximation (1 deg ~ 111 km)
         d_lat = (lat - stn["lat"]) * 111.0
         d_lon = (lon - stn["lon"]) * (111.0 * np.cos(np.radians(lat)))
@@ -153,8 +165,9 @@ def find_nearest_official_station(lat: float, lon: float) -> Dict[str, Any]:
         "station_name": nearest["name"],
         "station_lat": nearest["lat"],
         "station_lon": nearest["lon"],
+        "city": nearest.get("city", "Maharashtra"),
         "distance_km": round(float(min_dist), 2),
-        "station_pm25": nearest["base_pm25"],
+        "station_pm25": nearest.get("base_pm25", 85.0),
     }
 
 

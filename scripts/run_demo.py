@@ -24,8 +24,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 def main():
     print("=" * 65)
-    print("VAYUDRISHTI-AI — HACKATHON DEMO LAUNCHER")
-    print("Hyperlocal Satellite Air Quality Intelligence Platform (Pune v1)")
+    print("VAYUDRISHTI-AI — MAHARASHTRA DEMO LAUNCHER")
+    print("Statewide Satellite Air Quality Intelligence Platform (v2.0)")
     print("=" * 65)
 
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

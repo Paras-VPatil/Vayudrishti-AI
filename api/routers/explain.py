@@ -14,8 +14,8 @@ router = APIRouter(tags=["Explainability & Diagnostics"])
 
 @router.get("/explain", response_model=ExplainResponse)
 def explain_prediction(
-    lat: float = Query(18.5204, ge=18.0, le=19.5),
-    lon: float = Query(73.8567, ge=73.0, le=75.0)
+    lat: float = Query(18.5204, ge=15.0, le=23.0),
+    lon: float = Query(73.8567, ge=72.0, le=82.0)
 ):
     """
     Returns SHAP feature contribution breakdown and plain-language atmospheric reasoning for current prediction.

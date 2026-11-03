@@ -1,0 +1,147 @@
+# ============================================================
+# Vayudrishti-AI — Maharashtra Region Configuration
+# ============================================================
+region_name: "Maharashtra"
+state_code: "MH"
+country: "India"
+
+# Bounding box for Maharashtra (WGS-84, decimal degrees)
+# Covers 15.6°N to 22.1°N latitude, 72.6°E to 80.9°E longitude (~308,000 km²)
+bbox:
+  lat_min: 15.60
+  lat_max: 22.10
+  lon_min: 72.60
+  lon_max: 80.90
+
+# Grid specifications for statewide raster surface
+grid:
+  resolution_deg: 0.01          # ~1.0 km nominal resolution
+  overview_resolution_deg: 0.05 # ~5 km for rapid preview rendering
+  raster_width_px: 830
+  raster_height_px: 650
+
+# Key urban and industrial centers across Maharashtra
+cities:
+  - name: "Pune"
+    lat: 18.5204
+    lon: 73.8567
+    tier: 1
+    has_cpcb_monitors: true
+    district: "Pune"
+  - name: "Mumbai"
+    lat: 19.0760
+    lon: 72.8777
+    tier: 1
+    has_cpcb_monitors: true
+    district: "Mumbai City"
+  - name: "Nagpur"
+    lat: 21.1458
+    lon: 79.0882
+    tier: 1
+    has_cpcb_monitors: true
+    district: "Nagpur"
+  - name: "Nashik"
+    lat: 19.9975
+    lon: 73.7898
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Nashik"
+  - name: "Chhatrapati Sambhajinagar"
+    alias: "Aurangabad"
+    lat: 19.8762
+    lon: 75.3433
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Chhatrapati Sambhajinagar"
+  - name: "Thane"
+    lat: 19.2183
+    lon: 72.9781
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Thane"
+  - name: "Navi Mumbai"
+    lat: 19.0330
+    lon: 73.0297
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Thane"
+  - name: "Solapur"
+    lat: 17.6599
+    lon: 75.9064
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Solapur"
+  - name: "Kolhapur"
+    lat: 16.7050
+    lon: 74.2433
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Kolhapur"
+  - name: "Amravati"
+    lat: 20.9374
+    lon: 77.7796
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Amravati"
+  - name: "Nanded"
+    lat: 19.1383
+    lon: 77.3210
+    tier: 2
+    has_cpcb_monitors: true
+    district: "Nanded"
+  - name: "Akola"
+    lat: 20.7002
+    lon: 77.0082
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Akola"
+  - name: "Jalgaon"
+    lat: 21.0077
+    lon: 75.5626
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Jalgaon"
+  - name: "Chandrapur"
+    lat: 19.9615
+    lon: 79.2961
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Chandrapur"
+  - name: "Latur"
+    lat: 18.4088
+    lon: 76.5604
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Latur"
+  - name: "Dhule"
+    lat: 20.9042
+    lon: 74.7749
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Dhule"
+  - name: "Sangli"
+    lat: 16.8524
+    lon: 74.5815
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Sangli"
+  - name: "Satara"
+    lat: 17.6805
+    lon: 73.9937
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Satara"
+  - name: "Ahmednagar"
+    lat: 19.0948
+    lon: 74.7480
+    tier: 3
+    has_cpcb_monitors: true
+    district: "Ahmednagar"
+
+# Spatial data paths
+paths:
+  state_boundary_geojson: "data/geo/maharashtra_boundary.geojson"
+  districts_geojson: "data/geo/maharashtra_districts.geojson"
+  stations_inventory_parquet: "data/processed/stations_maharashtra.parquet"
+  raster_overlays_dir: "data/overlays"
+

@@ -118,7 +118,7 @@ def calculate_sub_index(pollutant: str, concentration: float) -> Optional[float]
     return 0.0
 
 
-def aqi_to_category(aqi_value: float) -> Tuple[str, str, str]:
+def aqi_to_category(aqi_value: Union[float, int]) -> Tuple[str, str, str]:
     """
     Returns category name, hex color code, and health advisory for an AQI value.
 
@@ -126,7 +126,7 @@ def aqi_to_category(aqi_value: float) -> Tuple[str, str, str]:
     -------
     (category, color_hex, health_advisory) : Tuple[str, str, str]
     """
-    if aqi_value is None or np.isnan(aqi_value):
+    if aqi_value is None or not isinstance(aqi_value, (int, float)) or np.isnan(aqi_value):
         return "Unknown", "#808080", "No data available."
 
     aqi_round = round(aqi_value)
@@ -138,6 +138,20 @@ def aqi_to_category(aqi_value: float) -> Tuple[str, str, str]:
         return "Severe", "#C00000", "Affects healthy people and seriously impacts those with existing diseases."
 
     return "Good", "#00B050", "Minimal impact."
+
+
+def get_category_color(category: str) -> str:
+    """Returns official CPCB hex color code for a category name."""
+    cat_colors = {
+        "Good": "#00B050",
+        "Satisfactory": "#92D050",
+        "Moderate": "#FFFF00",
+        "Poor": "#FF9900",
+        "Very Poor": "#FF0000",
+        "Severe": "#C00000",
+        "Unknown": "#808080"
+    }
+    return cat_colors.get(category, "#00B050")
 
 
 def pm25_to_naqi(pm25: float) -> Tuple[float, str]:

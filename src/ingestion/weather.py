@@ -48,8 +48,62 @@ ERA5_BANDS = [
     "v_component_of_wind_10m",    # m/s
     "surface_pressure",           # Pa
     "total_precipitation",        # m/hr (accumulated per hour)
-    "boundary_layer_height",      # m
+    "boundary_layer_height",      # m (from ERA5 single levels or Open-Meteo)
 ]
+
+
+def fetch_open_meteo_weather(
+    lat: float,
+    lon: float,
+    start_date: str,
+    end_date: str,
+    is_forecast: bool = False
+) -> pd.DataFrame:
+    """
+    Fetches verified meteorological reanalysis or forecast from Open-Meteo.
+    Includes boundary_layer_height directly from Copernicus ECMWF IFS / ERA5 integration.
+    """
+    import requests
+    import numpy as np
+
+    base_url = "https://api.open-meteo.com/v1/forecast" if is_forecast else "https://archive-api.open-meteo.com/v1/archive"
+    params = {
+        "latitude": round(lat, 4),
+        "longitude": round(lon, 4),
+        "hourly": [
+            "temperature_2m",
+            "relative_humidity_2m",
+            "precipitation",
+            "wind_speed_10m",
+            "wind_direction_10m",
+            "surface_pressure",
+            "boundary_layer_height"
+        ],
+        "timezone": "Asia/Kolkata"
+    }
+    if not is_forecast:
+        params["start_date"] = start_date
+        params["end_date"] = end_date
+    else:
+        params["forecast_days"] = 3
+
+    try:
+        resp = requests.get(base_url, params=params, timeout=15)
+        if resp.status_code == 200:
+            data = resp.json().get("hourly", {})
+            df = pd.DataFrame(data)
+            if not df.empty:
+                df["timestamp_ist"] = pd.to_datetime(df["time"])
+                df["timestamp_utc"] = df["timestamp_ist"].dt.tz_localize("Asia/Kolkata").dt.tz_convert("UTC")
+                # Derived wind components
+                rad = np.radians(df["wind_direction_10m"])
+                df["wind_u"] = -df["wind_speed_10m"] * np.sin(rad)
+                df["wind_v"] = -df["wind_speed_10m"] * np.cos(rad)
+                return df
+    except Exception as e:
+        logger.warning("Open-Meteo fetch failed for (%.3f, %.3f): %s", lat, lon, e)
+
+    return pd.DataFrame()
 
 
 def _init_gee() -> None:
