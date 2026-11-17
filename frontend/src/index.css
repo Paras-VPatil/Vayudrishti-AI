@@ -1,30 +1,81 @@
+/* ── Vayudrishti-AI Design System — Swiss Editorial Minimalism ── */
+
 :root {
-  --bg-primary: #07090e;
-  --bg-secondary: #0d121f;
-  --bg-card: rgba(17, 24, 39, 0.75);
-  --bg-card-hover: rgba(26, 36, 56, 0.85);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(56, 189, 248, 0.4);
+  /* Warm modern palette */
+  --bg-app: #FAFAF8;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F3F4F1;
+  --bg-elevated: #FFFFFF;
 
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  /* Typography Colors */
+  --text-primary: #202A35;
+  --text-secondary: #737B83;
+  --text-tertiary: #9AA1A9;
+  --text-inverse: #FFFFFF;
 
-  --accent-cyan: #38bdf8;
-  --accent-blue: #3b82f6;
-  --accent-purple: #a855f7;
+  /* Accent: Jade (Restrained, Institutional) */
+  --accent-jade: #187D6B;
+  --accent-jade-hover: #136556;
+  --accent-jade-subtle: #EBF5F3;
+  --accent-jade-border: #C8E5DF;
 
-  /* CPCB Official AQI Color Palette */
-  --aqi-good: #10b981;
-  --aqi-satisfactory: #84cc16;
-  --aqi-moderate: #eab308;
-  --aqi-poor: #f97316;
-  --aqi-very-poor: #ef4444;
-  --aqi-severe: #b91c1c;
+  /* Borders & Dividers */
+  --border-light: #E8EAE7;
+  --border-medium: #D5D8D4;
+  --border-focus: #187D6B;
 
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
+  /* Refined CPCB NAQI Color System (Subtle, Accessible Tones) */
+  --aqi-good-text: #1B5E20;
+  --aqi-good-bg: #E8F5E9;
+  --aqi-good-border: #C8E6C9;
+
+  --aqi-satisfactory-text: #33691E;
+  --aqi-satisfactory-bg: #F1F8E9;
+  --aqi-satisfactory-border: #DCEDC8;
+
+  --aqi-moderate-text: #8D5B00;
+  --aqi-moderate-bg: #FFF8E1;
+  --aqi-moderate-border: #FFE082;
+
+  --aqi-poor-text: #BF360C;
+  --aqi-poor-bg: #FBE9E7;
+  --aqi-poor-border: #FFCCBC;
+
+  --aqi-very-poor-text: #880E4F;
+  --aqi-very-poor-bg: #FCE4EC;
+  --aqi-very-poor-border: #F8BBD0;
+
+  --aqi-severe-text: #4A148C;
+  --aqi-severe-bg: #F3E5F5;
+  --aqi-severe-border: #E1BEE7;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Manrope', 'Inter', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing Scale (8px system) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Border Radius (6-12px) */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadows: Extremely subtle */
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.02);
+  --shadow-modal: 0 12px 36px -4px rgba(32, 42, 53, 0.16), 0 4px 16px -2px rgba(32, 42, 53, 0.08);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
 }
 
 * {
@@ -34,98 +85,177 @@
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-  font-family: var(--font-body);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
   line-height: 1.5;
-  overflow-x: hidden;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar */
+/* Minimal Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: var(--bg-app);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #D5D8D4;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #B4B9B2;
 }
 
-/* Glassmorphism Card Utility */
-.glass-panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+/* Base Card & Container Elements */
+.panel-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-subtle);
+  transition: border-color var(--transition-fast);
 }
 
-.glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+.panel-card:hover {
+  border-color: var(--border-medium);
 }
 
-/* Radiant glow utilities */
-.glow-cyan {
-  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.3);
-}
-.glow-emerald {
-  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
-}
-.glow-amber {
-  box-shadow: 0 0 25px -5px rgba(234, 179, 8, 0.3);
-}
-.glow-red {
-  box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.3);
-}
-
-/* Animations */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(0.98); }
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--accent-jade);
+  color: var(--text-inverse);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform 50ms;
 }
 
-.animate-pulse-subtle {
-  animation: pulse-subtle 3s infinite ease-in-out;
+.btn-primary:hover {
+  background-color: var(--accent-jade-hover);
 }
 
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
+.btn-primary:active {
+  transform: translateY(1px);
 }
 
-/* Leaflet dark theme map overrides */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 7px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-medium);
+}
+
+/* Segmented Control / Pill Group */
+.segmented-control {
+  display: inline-flex;
+  background-color: var(--bg-subtle);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  gap: 2px;
+}
+
+.segmented-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.segmented-btn:hover {
+  color: var(--text-primary);
+}
+
+.segmented-btn.active {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* Leaflet Clean Minimal Styling */
 .leaflet-container {
   width: 100% !important;
   height: 100% !important;
   min-height: 440px !important;
-  background: #0d121f !important;
-  font-family: var(--font-body) !important;
-  border-radius: 14px;
+  background: #F4F5F2 !important;
+  font-family: var(--font-sans) !important;
+  border-radius: var(--radius-md);
 }
+
+.leaflet-bar {
+  border: 1px solid var(--border-light) !important;
+  box-shadow: var(--shadow-subtle) !important;
+  border-radius: var(--radius-sm) !important;
+  overflow: hidden;
+}
+
 .leaflet-bar a {
-  background-color: #1e293b !important;
-  color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  transition: background-color var(--transition-fast);
 }
+
 .leaflet-bar a:hover {
-  background-color: #334155 !important;
+  background-color: var(--bg-subtle) !important;
 }
+
 .leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.95) !important;
-  color: #f8fafc !important;
-  backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 12px !important;
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-card) !important;
+  padding: 4px !important;
 }
+
 .leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.95) !important;
+  background: var(--bg-surface) !important;
+}
+
+/* Pulse animation for active location pin */
+@keyframes soft-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pulse-marker {
+  animation: soft-pulse 2.2s infinite ease-in-out;
 }

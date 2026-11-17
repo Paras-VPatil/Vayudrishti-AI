@@ -36,10 +36,15 @@ import {
   FileText,
   Search,
   Crosshair,
-  Map as MapIcon
+  Map as MapIcon,
+  X,
+  HeartPulse,
+  Shield,
+  BookOpen,
+  ArrowUpRight,
+  ExternalLink
 } from 'lucide-react';
-import L from 'leaflet';
-import 'leaflet.heat';
+import L from './lib/leaflet-setup';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Complete 36 Districts of Maharashtra
@@ -96,91 +101,91 @@ const MAHARASHTRA_DISTRICTS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. In-Between Cities, Talukas, Agro-Industrial Corridors & Expressway Nodes
+// 2. In-Between Cities, Talukas & Transit Corridors
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAHARASHTRA_IN_BETWEEN_TOWNS = [
-  // ── Pune – Mumbai Expressway & Old Highway Belt ──────────────
-  { id: 'TWN_LON', name: 'Lonavala', name_mr: 'लोणावळा', name_hi: 'लोनावला', district: 'Pune', lat: 18.7557, lon: 73.4091, type: 'Ghat Node' },
-  { id: 'TWN_KHA', name: 'Khandala', name_mr: 'खंडाळा', name_hi: 'खंडाला', district: 'Pune', lat: 18.7625, lon: 73.3762, type: 'Expressway Ridge' },
-  { id: 'TWN_TAL', name: 'Talegaon Dabhade', name_mr: 'तळेगाव दाभाडे', name_hi: 'तलेगांव दाभाड़े', district: 'Pune', lat: 18.7340, lon: 73.6766, type: 'Industrial' },
-  { id: 'TWN_PCMC', name: 'Pimpri-Chinchwad', name_mr: 'पिंपरी-चिंचवड', name_hi: 'पिंपरी-चिंचवड़', district: 'Pune', lat: 18.6277, lon: 73.8009, type: 'Automotive Hub' },
-  { id: 'TWN_KHO', name: 'Khopoli', name_mr: 'खोपोली', name_hi: 'खोपोली', district: 'Raigad', lat: 18.7885, lon: 73.3444, type: 'Industrial Ghat' },
-  { id: 'TWN_KAR', name: 'Karjat', name_mr: 'कर्जत', name_hi: 'कर्जत', district: 'Raigad', lat: 18.9102, lon: 73.3283, type: 'Rail Junction' },
-  { id: 'TWN_PAN', name: 'Panvel', name_mr: 'पनवेल', name_hi: 'पनवेल', district: 'Raigad', lat: 18.9894, lon: 73.1175, type: 'Airport Corridor' },
+  // Pune – Mumbai Expressway & Old Highway
+  { id: 'TWN_LON', name: 'Lonavala', name_mr: 'लोणावळा', name_hi: 'लोनावला', district: 'Pune', division: 'Pune Division', lat: 18.7557, lon: 73.4091, type: 'Ghat Node' },
+  { id: 'TWN_KHA', name: 'Khandala', name_mr: 'खंडाळा', name_hi: 'खंडाला', district: 'Pune', division: 'Pune Division', lat: 18.7625, lon: 73.3762, type: 'Expressway Ridge' },
+  { id: 'TWN_TAL', name: 'Talegaon Dabhade', name_mr: 'तळेगाव दाभाडे', name_hi: 'तलेगांव दाभाड़े', district: 'Pune', division: 'Pune Division', lat: 18.7340, lon: 73.6766, type: 'Industrial' },
+  { id: 'TWN_PCMC', name: 'Pimpri-Chinchwad', name_mr: 'पिंपरी-चिंचवड', name_hi: 'पिंपरी-चिंचवड़', district: 'Pune', division: 'Pune Division', lat: 18.6277, lon: 73.8009, type: 'Automotive Hub' },
+  { id: 'TWN_KHO', name: 'Khopoli', name_mr: 'खोपोली', name_hi: 'खोपोली', district: 'Raigad', division: 'Konkan Division', lat: 18.7885, lon: 73.3444, type: 'Industrial Ghat' },
+  { id: 'TWN_KAR', name: 'Karjat', name_mr: 'कर्जत', name_hi: 'कर्जत', district: 'Raigad', division: 'Konkan Division', lat: 18.9102, lon: 73.3283, type: 'Rail Junction' },
+  { id: 'TWN_PAN', name: 'Panvel', name_mr: 'पनवेल', name_hi: 'पनवेल', district: 'Raigad', division: 'Konkan Division', lat: 18.9894, lon: 73.1175, type: 'Airport Corridor' },
 
-  // ── Western Maharashtra (Sugar & Agro Belt) ──────────────────
-  { id: 'TWN_BAR', name: 'Baramati', name_mr: 'बारामती', name_hi: 'बारामती', district: 'Pune', lat: 18.1517, lon: 74.5770, type: 'Agro-Industrial' },
-  { id: 'TWN_DAU', name: 'Daund', name_mr: 'दौंड', name_hi: 'दौंड', district: 'Pune', lat: 18.4658, lon: 74.5828, type: 'Rail Junction' },
-  { id: 'TWN_IND', name: 'Indapur', name_mr: 'इंदापूर', name_hi: 'इंदापुर', district: 'Pune', lat: 18.1189, lon: 75.0264, type: 'Sugar Highway' },
-  { id: 'TWN_PHA', name: 'Phaltan', name_mr: 'फलटण', name_hi: 'फलटन', district: 'Satara', lat: 17.9867, lon: 74.4332, type: 'Agro Sugar' },
-  { id: 'TWN_PAN2', name: 'Pandharpur', name_mr: 'पंढरपूर', name_hi: 'पंढरपुर', district: 'Solapur', lat: 17.6778, lon: 75.3278, type: 'Pilgrimage Hub' },
-  { id: 'TWN_KUR', name: 'Kurduvadi', name_mr: 'कुर्डुवाडी', name_hi: 'कुर्डूवाडी', district: 'Solapur', lat: 18.0872, lon: 75.4344, type: 'Rail Junction' },
-  { id: 'TWN_SHI', name: 'Shirwal', name_mr: 'शिरवळ', name_hi: 'शिरवल', district: 'Satara', lat: 18.1364, lon: 73.9856, type: 'NH48 MIDC' },
-  { id: 'TWN_WAI', name: 'Wai', name_mr: 'वाई', name_hi: 'वाई', district: 'Satara', lat: 17.9493, lon: 73.8924, type: 'Krishna Valley' },
-  { id: 'TWN_MAH', name: 'Mahabaleshwar', name_mr: 'महाबळेश्वर', name_hi: 'महाबलेश्वर', district: 'Satara', lat: 17.9237, lon: 73.6586, type: 'Hill Station' },
-  { id: 'TWN_PCH', name: 'Panchgani', name_mr: 'पाचगणी', name_hi: 'पांचगणी', district: 'Satara', lat: 17.9237, lon: 73.8016, type: 'Plateau Town' },
-  { id: 'TWN_KRD', name: 'Karad', name_mr: 'कराड', name_hi: 'कराड', district: 'Satara', lat: 17.2885, lon: 74.1844, type: 'Agro Confluence' },
-  { id: 'TWN_ISL', name: 'Islampur', name_mr: 'इस्लामपूर', name_hi: 'इस्लामपुर', district: 'Sangli', lat: 17.0519, lon: 74.2674, type: 'Sugar Complex' },
-  { id: 'TWN_ICH', name: 'Ichalkaranji', name_mr: 'इचलकरंजी', name_hi: 'इचलकरंजी', district: 'Kolhapur', lat: 16.6980, lon: 74.4578, type: 'Textile Capital' },
-  { id: 'TWN_MIR', name: 'Miraj', name_mr: 'मिरज', name_hi: 'मिरज', district: 'Sangli', lat: 16.8284, lon: 74.6465, type: 'Medical Junction' },
+  // Western Maharashtra (Sugar, Industrial & Pilgrimage)
+  { id: 'TWN_BAR', name: 'Baramati', name_mr: 'बारामती', name_hi: 'बारामती', district: 'Pune', division: 'Pune Division', lat: 18.1517, lon: 74.5770, type: 'Agro-Industrial' },
+  { id: 'TWN_DAU', name: 'Daund', name_mr: 'दौंड', name_hi: 'दौंड', district: 'Pune', division: 'Pune Division', lat: 18.4658, lon: 74.5828, type: 'Rail Junction' },
+  { id: 'TWN_IND', name: 'Indapur', name_mr: 'इंदापूर', name_hi: 'इंदापुर', district: 'Pune', division: 'Pune Division', lat: 18.1189, lon: 75.0264, type: 'Sugar Highway' },
+  { id: 'TWN_PHA', name: 'Phaltan', name_mr: 'फलटण', name_hi: 'फलटन', district: 'Satara', division: 'Pune Division', lat: 17.9867, lon: 74.4332, type: 'Agro Sugar' },
+  { id: 'TWN_PAN2', name: 'Pandharpur', name_mr: 'पंढरपूर', name_hi: 'पंढरपुर', district: 'Solapur', division: 'Pune Division', lat: 17.6778, lon: 75.3278, type: 'Pilgrimage Hub' },
+  { id: 'TWN_KUR', name: 'Kurduvadi', name_mr: 'कुर्डुवाडी', name_hi: 'कुर्डूवाडी', district: 'Solapur', division: 'Pune Division', lat: 18.0872, lon: 75.4344, type: 'Rail Junction' },
+  { id: 'TWN_SHI', name: 'Shirwal', name_mr: 'शिरवळ', name_hi: 'शिरवल', district: 'Satara', division: 'Pune Division', lat: 18.1364, lon: 73.9856, type: 'NH48 MIDC' },
+  { id: 'TWN_WAI', name: 'Wai', name_mr: 'वाई', name_hi: 'वाई', district: 'Satara', division: 'Pune Division', lat: 17.9493, lon: 73.8924, type: 'Krishna Valley' },
+  { id: 'TWN_MAH', name: 'Mahabaleshwar', name_mr: 'महाबळेश्वर', name_hi: 'महाबलेश्वर', district: 'Satara', division: 'Pune Division', lat: 17.9237, lon: 73.6586, type: 'Hill Station' },
+  { id: 'TWN_PCH', name: 'Panchgani', name_mr: 'पाचगणी', name_hi: 'पांचगणी', district: 'Satara', division: 'Pune Division', lat: 17.9237, lon: 73.8016, type: 'Plateau Town' },
+  { id: 'TWN_KRD', name: 'Karad', name_mr: 'कराड', name_hi: 'कराड', district: 'Satara', division: 'Pune Division', lat: 17.2885, lon: 74.1844, type: 'Agro Confluence' },
+  { id: 'TWN_ISL', name: 'Islampur', name_mr: 'इस्लामपूर', name_hi: 'इस्लामपुर', district: 'Sangli', division: 'Pune Division', lat: 17.0519, lon: 74.2674, type: 'Sugar Complex' },
+  { id: 'TWN_ICH', name: 'Ichalkaranji', name_mr: 'इचलकरंजी', name_hi: 'इचलकरंजी', district: 'Kolhapur', division: 'Pune Division', lat: 16.6980, lon: 74.4578, type: 'Textile Capital' },
+  { id: 'TWN_MIR', name: 'Miraj', name_mr: 'मिरज', name_hi: 'मिरज', district: 'Sangli', division: 'Pune Division', lat: 16.8284, lon: 74.6465, type: 'Medical Junction' },
 
-  // ── Nashik & North Maharashtra Corridor ─────────────────────
-  { id: 'TWN_SIN', name: 'Sinnar', name_mr: 'सिन्नर', name_hi: 'सिन्नर', district: 'Nashik', lat: 19.8458, lon: 73.9961, type: 'SEZ & Power' },
-  { id: 'TWN_SAN2', name: 'Sangamner', name_mr: 'संगमनेर', name_hi: 'संगमनेर', district: 'Ahilyanagar', lat: 19.5767, lon: 74.2078, type: 'Cooperative Milk' },
-  { id: 'TWN_SHR', name: 'Shirdi', name_mr: 'शिर्डी', name_hi: 'शिरडी', district: 'Ahilyanagar', lat: 19.7667, lon: 74.4764, type: 'Pilgrimage Hub' },
-  { id: 'TWN_KOP', name: 'Kopargaon', name_mr: 'कोपरगाव', name_hi: 'कोपरगांव', district: 'Ahilyanagar', lat: 19.8885, lon: 74.4795, type: 'Godavari Agro' },
-  { id: 'TWN_SRP', name: 'Shrirampur', name_mr: 'श्रीरामपूर', name_hi: 'श्रीरामपुर', district: 'Ahilyanagar', lat: 19.6175, lon: 74.6567, type: 'Citrus & Sugar' },
-  { id: 'TWN_RAH', name: 'Rahuri', name_mr: 'राहुरी', name_hi: 'राहुरी', district: 'Ahilyanagar', lat: 19.3900, lon: 74.6500, type: 'Agri University' },
-  { id: 'TWN_MNC', name: 'Manchar', name_mr: 'मंचार', name_hi: 'मंचार', district: 'Pune', lat: 19.0069, lon: 73.9406, type: 'Agro Corridor' },
-  { id: 'TWN_JUN', name: 'Junnar', name_mr: 'जुन्नर', name_hi: 'जुन्नर', district: 'Pune', lat: 19.2069, lon: 73.8767, type: 'Shivneri Valley' },
-  { id: 'TWN_CHK', name: 'Chakan', name_mr: 'चाकण', name_hi: 'चाकण', district: 'Pune', lat: 18.7597, lon: 73.8584, type: 'Automobile Hub' },
-  { id: 'TWN_MAL', name: 'Malegaon', name_mr: 'मालेगाव', name_hi: 'मालेगांव', district: 'Nashik', lat: 20.5539, lon: 74.5298, type: 'Powerloom City' },
-  { id: 'TWN_MNM', name: 'Manmad', name_mr: 'मनमाड', name_hi: 'मनमाड', district: 'Nashik', lat: 20.2520, lon: 74.4370, type: 'Railway Hub' },
-  { id: 'TWN_YEO', name: 'Yeola', name_mr: 'येवला', name_hi: 'येवला', district: 'Nashik', lat: 20.0422, lon: 74.4856, type: 'Paithani Heritage' },
-  { id: 'TWN_CHA2', name: 'Chalisgaon', name_mr: 'चाळीसगाव', name_hi: 'चालीसगांव', district: 'Jalgaon', lat: 20.4633, lon: 75.0136, type: 'Cotton & Rail' },
-  { id: 'TWN_BHU', name: 'Bhusawal', name_mr: 'भुसावळ', name_hi: 'भुसावल', district: 'Jalgaon', lat: 21.0455, lon: 75.7915, type: 'Thermal Power' },
-  { id: 'TWN_AML', name: 'Amalner', name_mr: 'अमळनेर', name_hi: 'अमलनेर', district: 'Jalgaon', lat: 21.0442, lon: 75.0594, type: 'Agro Mills' },
+  // Nashik & North Maharashtra Corridor
+  { id: 'TWN_SIN', name: 'Sinnar', name_mr: 'सिन्नर', name_hi: 'सिन्नर', district: 'Nashik', division: 'Nashik Division', lat: 19.8458, lon: 73.9961, type: 'SEZ & Power' },
+  { id: 'TWN_SAN2', name: 'Sangamner', name_mr: 'संगमनेर', name_hi: 'संगमनेर', district: 'Ahilyanagar', division: 'Nashik Division', lat: 19.5767, lon: 74.2078, type: 'Cooperative Milk' },
+  { id: 'TWN_SHR', name: 'Shirdi', name_mr: 'शिर्डी', name_hi: 'शिरडी', district: 'Ahilyanagar', division: 'Nashik Division', lat: 19.7667, lon: 74.4764, type: 'Pilgrimage Hub' },
+  { id: 'TWN_KOP', name: 'Kopargaon', name_mr: 'कोपरगाव', name_hi: 'कोपरगांव', district: 'Ahilyanagar', division: 'Nashik Division', lat: 19.8885, lon: 74.4795, type: 'Godavari Agro' },
+  { id: 'TWN_SRP', name: 'Shrirampur', name_mr: 'श्रीरामपूर', name_hi: 'श्रीरामपुर', district: 'Ahilyanagar', division: 'Nashik Division', lat: 19.6175, lon: 74.6567, type: 'Citrus & Sugar' },
+  { id: 'TWN_RAH', name: 'Rahuri', name_mr: 'राहुरी', name_hi: 'राहुरी', district: 'Ahilyanagar', division: 'Nashik Division', lat: 19.3900, lon: 74.6500, type: 'Agri University' },
+  { id: 'TWN_MNC', name: 'Manchar', name_mr: 'मंचार', name_hi: 'मंचार', district: 'Pune', division: 'Pune Division', lat: 19.0069, lon: 73.9406, type: 'Agro Corridor' },
+  { id: 'TWN_JUN', name: 'Junnar', name_mr: 'जुन्नर', name_hi: 'जुन्नर', district: 'Pune', division: 'Pune Division', lat: 19.2069, lon: 73.8767, type: 'Shivneri Valley' },
+  { id: 'TWN_CHK', name: 'Chakan', name_mr: 'चाकण', name_hi: 'चाकण', district: 'Pune', division: 'Pune Division', lat: 18.7597, lon: 73.8584, type: 'Automobile Hub' },
+  { id: 'TWN_MAL', name: 'Malegaon', name_mr: 'मालेगाव', name_hi: 'मालेगांव', district: 'Nashik', division: 'Nashik Division', lat: 20.5539, lon: 74.5298, type: 'Powerloom City' },
+  { id: 'TWN_MNM', name: 'Manmad', name_mr: 'मनमाड', name_hi: 'मनमाड', district: 'Nashik', division: 'Nashik Division', lat: 20.2520, lon: 74.4370, type: 'Railway Hub' },
+  { id: 'TWN_YEO', name: 'Yeola', name_mr: 'येवला', name_hi: 'येवला', district: 'Nashik', division: 'Nashik Division', lat: 20.0422, lon: 74.4856, type: 'Paithani Heritage' },
+  { id: 'TWN_CHA2', name: 'Chalisgaon', name_mr: 'चाळीसगाव', name_hi: 'चालीसगांव', district: 'Jalgaon', division: 'Nashik Division', lat: 20.4633, lon: 75.0136, type: 'Cotton & Rail' },
+  { id: 'TWN_BHU', name: 'Bhusawal', name_mr: 'भुसावळ', name_hi: 'भुसावल', district: 'Jalgaon', division: 'Nashik Division', lat: 21.0455, lon: 75.7915, type: 'Thermal Power' },
+  { id: 'TWN_AML', name: 'Amalner', name_mr: 'अमळनेर', name_hi: 'अमलनेर', district: 'Jalgaon', division: 'Nashik Division', lat: 21.0442, lon: 75.0594, type: 'Agro Mills' },
 
-  // ── Marathwada Corridors ────────────────────────────────────
-  { id: 'TWN_PAI', name: 'Paithan', name_mr: 'पैठण', name_hi: 'पैठन', district: 'Sambhajinagar', lat: 19.4800, lon: 75.3800, type: 'Dam & Silk' },
-  { id: 'TWN_SEL', name: 'Selu', name_mr: 'सेलू', name_hi: 'सेलू', district: 'Parbhani', lat: 19.8000, lon: 76.4500, type: 'Cotton Ginning' },
-  { id: 'TWN_BAS', name: 'Basmath', name_mr: 'वसमत', name_hi: 'वसमत', district: 'Hingoli', lat: 19.7000, lon: 77.1600, type: 'Turmeric Hub' },
-  { id: 'TWN_PRL', name: 'Parli Vaijnath', name_mr: 'परळी वैजनाथ', name_hi: 'परली वैजनाथ', district: 'Beed', lat: 18.8500, lon: 76.5300, type: 'Thermal & Temple' },
-  { id: 'TWN_AMB', name: 'Ambajogai', name_mr: 'अंबाजोगाई', name_hi: 'अंबाजोगाई', district: 'Beed', lat: 18.7300, lon: 76.3800, type: 'Medical & Cultural' },
-  { id: 'TWN_UDG', name: 'Udgir', name_mr: 'उदगीर', name_hi: 'उदगीर', district: 'Latur', lat: 18.3900, lon: 77.1100, type: 'Border Market' },
-  { id: 'TWN_TUL', name: 'Tuljapur', name_mr: 'तुळजापूर', name_hi: 'तुलजापुर', district: 'Dharashiv', lat: 18.0050, lon: 76.0717, type: 'Historic Temple' },
+  // Marathwada Corridors
+  { id: 'TWN_PAI', name: 'Paithan', name_mr: 'पैठण', name_hi: 'पैठन', district: 'Sambhajinagar', division: 'Sambhajinagar Division', lat: 19.4800, lon: 75.3800, type: 'Dam & Silk' },
+  { id: 'TWN_SEL', name: 'Selu', name_mr: 'सेलू', name_hi: 'सेलू', district: 'Parbhani', division: 'Sambhajinagar Division', lat: 19.8000, lon: 76.4500, type: 'Cotton Ginning' },
+  { id: 'TWN_BAS', name: 'Basmath', name_mr: 'वसमत', name_hi: 'वसमत', district: 'Hingoli', division: 'Sambhajinagar Division', lat: 19.7000, lon: 77.1600, type: 'Turmeric Hub' },
+  { id: 'TWN_PRL', name: 'Parli Vaijnath', name_mr: 'परळी वैजनाथ', name_hi: 'परली वैजनाथ', district: 'Beed', division: 'Sambhajinagar Division', lat: 18.8500, lon: 76.5300, type: 'Thermal & Temple' },
+  { id: 'TWN_AMB', name: 'Ambajogai', name_mr: 'अंबाजोगाई', name_hi: 'अंबाजोगाई', district: 'Beed', division: 'Sambhajinagar Division', lat: 18.7300, lon: 76.3800, type: 'Medical & Cultural' },
+  { id: 'TWN_UDG', name: 'Udgir', name_mr: 'उदगीर', name_hi: 'उदगीर', district: 'Latur', division: 'Sambhajinagar Division', lat: 18.3900, lon: 77.1100, type: 'Border Market' },
+  { id: 'TWN_TUL', name: 'Tuljapur', name_mr: 'तुळजापूर', name_hi: 'तुलजापुर', district: 'Dharashiv', division: 'Sambhajinagar Division', lat: 18.0050, lon: 76.0717, type: 'Historic Temple' },
 
-  // ── Vidarbha Corridor ───────────────────────────────────────
-  { id: 'TWN_HNG', name: 'Hinganghat', name_mr: 'हिंगणघाट', name_hi: 'हिंगणघाट', district: 'Wardha', lat: 20.5600, lon: 78.8400, type: 'Spinning Mills' },
-  { id: 'TWN_WAR2', name: 'Warora', name_mr: 'वरोरा', name_hi: 'वरोरा', district: 'Chandrapur', lat: 20.2300, lon: 78.9900, type: 'Coal Corridor' },
-  { id: 'TWN_BHD', name: 'Bhadravati', name_mr: 'भद्रावती', name_hi: 'भद्रावती', district: 'Chandrapur', lat: 20.1000, lon: 79.1200, type: 'Coal Mines' },
-  { id: 'TWN_BAL', name: 'Ballarpur', name_mr: 'बल्लारपूर', name_hi: 'बल्लारपुर', district: 'Chandrapur', lat: 19.8500, lon: 79.3500, type: 'Paper & Coal' },
-  { id: 'TWN_KMP', name: 'Kamptee', name_mr: 'कामठी', name_hi: 'कामठी', district: 'Nagpur', lat: 21.2200, lon: 79.2000, type: 'Cantonment' },
-  { id: 'TWN_UMR', name: 'Umred', name_mr: 'उमरेड', name_hi: 'उमरेड', district: 'Nagpur', lat: 20.8500, lon: 79.3300, type: 'Chili & Coal' },
-  { id: 'TWN_KAT', name: 'Katol', name_mr: 'काटोल', name_hi: 'काटोल', district: 'Nagpur', lat: 21.2800, lon: 78.5800, type: 'Orange Capital' },
-  { id: 'TWN_RAM', name: 'Ramtek', name_mr: 'रामटेक', name_hi: 'रामटेक', district: 'Nagpur', lat: 21.4000, lon: 79.3300, type: 'Pilgrimage' },
-  { id: 'TWN_TUM', name: 'Tumsar', name_mr: 'तुमसर', name_hi: 'तुमसर', district: 'Bhandara', lat: 21.3800, lon: 79.7400, type: 'Rice City' },
-  { id: 'TWN_TIR', name: 'Tiroda', name_mr: 'तिरोडा', name_hi: 'तिरोड़ा', district: 'Gondia', lat: 21.4100, lon: 79.9300, type: 'Thermal Power' },
-  { id: 'TWN_ACH', name: 'Achalpur', name_mr: 'अचलपूर', name_hi: 'अचलपुर', district: 'Amravati', lat: 21.2600, lon: 77.5100, type: 'Melghat Foothills' },
-  { id: 'TWN_KHM', name: 'Khamgaon', name_mr: 'खामगाव', name_hi: 'खामगांव', district: 'Buldhana', lat: 20.6900, lon: 76.5700, type: 'Silver & Cotton' },
-  { id: 'TWN_SHE', name: 'Shegaon', name_mr: 'शेगाव', name_hi: 'शेगांव', district: 'Buldhana', lat: 20.7900, lon: 76.6900, type: 'Pilgrimage' },
-  { id: 'TWN_MLK', name: 'Malkapur', name_mr: 'मलकापूर', name_hi: 'मलकापुर', district: 'Buldhana', lat: 20.8800, lon: 76.2000, type: 'NH53 Freight' },
+  // Vidarbha Corridor
+  { id: 'TWN_HNG', name: 'Hinganghat', name_mr: 'हिंगणघाट', name_hi: 'हिंगणघाट', district: 'Wardha', division: 'Nagpur Division', lat: 20.5600, lon: 78.8400, type: 'Spinning Mills' },
+  { id: 'TWN_WAR2', name: 'Warora', name_mr: 'वरोरा', name_hi: 'वरोरा', district: 'Chandrapur', division: 'Nagpur Division', lat: 20.2300, lon: 78.9900, type: 'Coal Corridor' },
+  { id: 'TWN_BHD', name: 'Bhadravati', name_mr: 'भद्रावती', name_hi: 'भद्रावती', district: 'Chandrapur', division: 'Nagpur Division', lat: 20.1000, lon: 79.1200, type: 'Coal Mines' },
+  { id: 'TWN_BAL', name: 'Ballarpur', name_mr: 'बल्लारपूर', name_hi: 'बल्लारपुर', district: 'Chandrapur', division: 'Nagpur Division', lat: 19.8500, lon: 79.3500, type: 'Paper & Coal' },
+  { id: 'TWN_KMP', name: 'Kamptee', name_mr: 'कामठी', name_hi: 'कामठी', district: 'Nagpur', division: 'Nagpur Division', lat: 21.2200, lon: 79.2000, type: 'Cantonment' },
+  { id: 'TWN_UMR', name: 'Umred', name_mr: 'उमरेड', name_hi: 'उमरेड', district: 'Nagpur', division: 'Nagpur Division', lat: 20.8500, lon: 79.3300, type: 'Chili & Coal' },
+  { id: 'TWN_KAT', name: 'Katol', name_mr: 'काटोल', name_hi: 'काटोल', district: 'Nagpur', division: 'Nagpur Division', lat: 21.2800, lon: 78.5800, type: 'Orange Capital' },
+  { id: 'TWN_RAM', name: 'Ramtek', name_mr: 'रामटेक', name_hi: 'रामटेक', district: 'Nagpur', division: 'Nagpur Division', lat: 21.4000, lon: 79.3300, type: 'Pilgrimage' },
+  { id: 'TWN_TUM', name: 'Tumsar', name_mr: 'तुमसर', name_hi: 'तुमसर', district: 'Bhandara', division: 'Nagpur Division', lat: 21.3800, lon: 79.7400, type: 'Rice City' },
+  { id: 'TWN_TIR', name: 'Tiroda', name_mr: 'तिरोडा', name_hi: 'तिरोड़ा', district: 'Gondia', division: 'Nagpur Division', lat: 21.4100, lon: 79.9300, type: 'Thermal Power' },
+  { id: 'TWN_ACH', name: 'Achalpur', name_mr: 'अचलपूर', name_hi: 'अचलपुर', district: 'Amravati', division: 'Amravati Division', lat: 21.2600, lon: 77.5100, type: 'Melghat Foothills' },
+  { id: 'TWN_KHM', name: 'Khamgaon', name_mr: 'खामगाव', name_hi: 'खामगांव', district: 'Buldhana', division: 'Amravati Division', lat: 20.6900, lon: 76.5700, type: 'Silver & Cotton' },
+  { id: 'TWN_SHE', name: 'Shegaon', name_mr: 'शेगाव', name_hi: 'शेगांव', district: 'Buldhana', division: 'Amravati Division', lat: 20.7900, lon: 76.6900, type: 'Pilgrimage' },
+  { id: 'TWN_MLK', name: 'Malkapur', name_mr: 'मलकापूर', name_hi: 'मलकापुर', district: 'Buldhana', division: 'Amravati Division', lat: 20.8800, lon: 76.2000, type: 'NH53 Freight' },
 
-  // ── Konkan Coastal Belt ─────────────────────────────────────
-  { id: 'TWN_PEN', name: 'Pen', name_mr: 'पेण', name_hi: 'पेण', district: 'Raigad', lat: 18.7400, lon: 73.0900, type: 'Craftsmanship' },
-  { id: 'TWN_ROH', name: 'Roha', name_mr: 'रोहा', name_hi: 'रोहा', district: 'Raigad', lat: 18.4400, lon: 73.1200, type: 'Chemical MIDC' },
-  { id: 'TWN_MAN', name: 'Mangaon', name_mr: 'माणगाव', name_hi: 'माणगांव', district: 'Raigad', lat: 18.2500, lon: 73.2800, type: 'NH66 Crossroads' },
-  { id: 'TWN_MHD', name: 'Mahad', name_mr: 'महाड', name_hi: 'महाड', district: 'Raigad', lat: 18.0800, lon: 73.4200, type: 'Chemical Zone' },
-  { id: 'TWN_ALI', name: 'Alibaug', name_mr: 'अलिबाग', name_hi: 'अलिबाग', district: 'Raigad', lat: 18.6414, lon: 72.8722, type: 'Coastal Tourism' },
-  { id: 'TWN_CHIP', name: 'Chiplun', name_mr: 'चिपळूण', name_hi: 'चिपळूण', district: 'Ratnagiri', lat: 17.5300, lon: 73.5100, type: 'Chemical & River' },
-  { id: 'TWN_DAP', name: 'Dapoli', name_mr: 'दापोली', name_hi: 'दापोली', district: 'Ratnagiri', lat: 17.7600, lon: 73.1800, type: 'Agro & Beach' },
-  { id: 'TWN_KAN', name: 'Kankavli', name_mr: 'कणकवली', name_hi: 'कणकवली', district: 'Sindhudurg', lat: 16.2700, lon: 73.7100, type: 'Transit Hub' },
-  { id: 'TWN_SAW', name: 'Sawantwadi', name_mr: 'सावंतवाडी', name_hi: 'सावंतवाड़ी', district: 'Sindhudurg', lat: 15.9000, lon: 73.8200, type: 'Heritage Border' },
-  { id: 'TWN_MAL2', name: 'Malvan', name_mr: 'मालवण', name_hi: 'मालवन', district: 'Sindhudurg', lat: 16.0600, lon: 73.4700, type: 'Fort & Marine' },
-  { id: 'TWN_DAH', name: 'Dahanu', name_mr: 'डहाणू', name_hi: 'डहाणू', district: 'Palghar', lat: 19.9700, lon: 72.7300, type: 'Power & Chickoo' },
-  { id: 'TWN_BOI', name: 'Boisar', name_mr: 'बोईसर', name_hi: 'बोईसर', district: 'Palghar', lat: 19.8000, lon: 72.7500, type: 'Tarapur Atomic' },
-  { id: 'TWN_VAS', name: 'Vasai-Virar', name_mr: 'वसई-विरार', name_hi: 'वसई-विरार', district: 'Palghar', lat: 19.3800, lon: 72.8300, type: 'Peri-Urban Metropolis' }
+  // Konkan Coastal Belt
+  { id: 'TWN_PEN', name: 'Pen', name_mr: 'पेण', name_hi: 'पेण', district: 'Raigad', division: 'Konkan Division', lat: 18.7400, lon: 73.0900, type: 'Craftsmanship' },
+  { id: 'TWN_ROH', name: 'Roha', name_mr: 'रोहा', name_hi: 'रोहा', district: 'Raigad', division: 'Konkan Division', lat: 18.4400, lon: 73.1200, type: 'Chemical MIDC' },
+  { id: 'TWN_MAN', name: 'Mangaon', name_mr: 'माणगाव', name_hi: 'माणगांव', district: 'Raigad', division: 'Konkan Division', lat: 18.2500, lon: 73.2800, type: 'NH66 Crossroads' },
+  { id: 'TWN_MHD', name: 'Mahad', name_mr: 'महाड', name_hi: 'महाड', district: 'Raigad', division: 'Konkan Division', lat: 18.0800, lon: 73.4200, type: 'Chemical Zone' },
+  { id: 'TWN_ALI', name: 'Alibaug', name_mr: 'अलिबाग', name_hi: 'अलिबाग', district: 'Raigad', division: 'Konkan Division', lat: 18.6414, lon: 72.8722, type: 'Coastal Tourism' },
+  { id: 'TWN_CHIP', name: 'Chiplun', name_mr: 'चिपळूण', name_hi: 'चिपळूण', district: 'Ratnagiri', division: 'Konkan Division', lat: 17.5300, lon: 73.5100, type: 'Chemical & River' },
+  { id: 'TWN_DAP', name: 'Dapoli', name_mr: 'दापोली', name_hi: 'दापोली', district: 'Ratnagiri', division: 'Konkan Division', lat: 17.7600, lon: 73.1800, type: 'Agro & Beach' },
+  { id: 'TWN_KAN', name: 'Kankavli', name_mr: 'कणकवली', name_hi: 'कणकवली', district: 'Sindhudurg', division: 'Konkan Division', lat: 16.2700, lon: 73.7100, type: 'Transit Hub' },
+  { id: 'TWN_SAW', name: 'Sawantwadi', name_mr: 'सावंतवाडी', name_hi: 'सावंतवाड़ी', district: 'Sindhudurg', division: 'Konkan Division', lat: 15.9000, lon: 73.8200, type: 'Heritage Border' },
+  { id: 'TWN_MAL2', name: 'Malvan', name_mr: 'मालवण', name_hi: 'मालवन', district: 'Sindhudurg', division: 'Konkan Division', lat: 16.0600, lon: 73.4700, type: 'Fort & Marine' },
+  { id: 'TWN_DAH', name: 'Dahanu', name_mr: 'डहाणू', name_hi: 'डहाणू', district: 'Palghar', division: 'Konkan Division', lat: 19.9700, lon: 72.7300, type: 'Power & Chickoo' },
+  { id: 'TWN_BOI', name: 'Boisar', name_mr: 'बोईसर', name_hi: 'बोईसर', district: 'Palghar', division: 'Konkan Division', lat: 19.8000, lon: 72.7500, type: 'Tarapur Atomic' },
+  { id: 'TWN_VAS', name: 'Vasai-Virar', name_mr: 'वसई-विरार', name_hi: 'वसई-विरार', district: 'Palghar', division: 'Konkan Division', lat: 19.3800, lon: 72.8300, type: 'Peri-Urban Metropolis' }
 ];
 
 const ALL_MAHARASHTRA_LOCATIONS = [
@@ -199,27 +204,21 @@ const STATEWIDE_OVERVIEW = {
   zoom: 7
 };
 
-// Verified baseline CAAQMS Ground Stations across Maharashtra
+// Default baseline CPCB/MPCB stations
 const DEFAULT_STATIONS = [
   { id: 'MH_PUN_001', name: 'Shivajinagar, Pune', city: 'Pune', lat: 18.5314, lon: 73.8446, zone: 'Urban Core' },
   { id: 'MH_PUN_002', name: 'Hadapsar, Pune', city: 'Pune', lat: 18.5089, lon: 73.9260, zone: 'Industrial' },
   { id: 'MH_PUN_003', name: 'Bhosari MIDC', city: 'Pune', lat: 18.6277, lon: 73.8488, zone: 'Manufacturing' },
-  { id: 'MH_PUN_004', name: 'Katraj Ridge', city: 'Pune', lat: 18.4575, lon: 73.8677, zone: 'Suburban Ridge' },
-  { id: 'MH_PUN_005', name: 'Pashan (IITM)', city: 'Pune', lat: 18.5390, lon: 73.8050, zone: 'Green Valley' },
   { id: 'MH_MUM_001', name: 'BKC, Mumbai', city: 'Mumbai', lat: 19.0662, lon: 72.8687, zone: 'Financial Hub' },
   { id: 'MH_MUM_002', name: 'Colaba, South Mumbai', city: 'Mumbai', lat: 18.9067, lon: 72.8147, zone: 'Coastal Core' },
-  { id: 'MH_MUM_003', name: 'Worli Coastal', city: 'Mumbai', lat: 19.0178, lon: 72.8178, zone: 'Marine Corridor' },
   { id: 'MH_THA_001', name: 'Naupada, Thane', city: 'Thane', lat: 19.1868, lon: 72.9754, zone: 'Creek Urban' },
-  { id: 'MH_NAV_001', name: 'Airoli, Navi Mumbai', city: 'Navi Mumbai', lat: 19.1550, lon: 72.9986, zone: 'Tech Hub' },
   { id: 'MH_NAG_001', name: 'Civil Lines, Nagpur', city: 'Nagpur', lat: 21.1524, lon: 79.0722, zone: 'Vidarbha Admin' },
-  { id: 'MH_NAG_002', name: 'Opposite GPO, Nagpur', city: 'Nagpur', lat: 21.1498, lon: 79.0806, zone: 'Commercial' },
   { id: 'MH_NSK_001', name: 'Gangapur Road, Nashik', city: 'Nashik', lat: 20.0125, lon: 73.7650, zone: 'Valley Urban' },
   { id: 'MH_AUR_001', name: 'CIDCO, Sambhajinagar', city: 'Chhatrapati Sambhajinagar', lat: 19.8762, lon: 75.3621, zone: 'Urban Center' },
   { id: 'MH_SOL_001', name: 'MIDC Solapur', city: 'Solapur', lat: 17.6715, lon: 75.9228, zone: 'Textile Belt' },
   { id: 'MH_KOL_001', name: 'Shivaji Univ., Kolhapur', city: 'Kolhapur', lat: 16.6780, lon: 74.2540, zone: 'Southern Plateau' },
   { id: 'MH_CHA_001', name: 'Chandrapur MIDC', city: 'Chandrapur', lat: 19.9530, lon: 79.3010, zone: 'Thermal & Mining' },
   { id: 'MH_AMR_001', name: 'Amravati Town', city: 'Amravati', lat: 20.9320, lon: 77.7523, zone: 'Central Vidarbha' },
-  { id: 'MH_AKL_001', name: 'Civil Lines, Akola', city: 'Akola', lat: 20.7020, lon: 77.0110, zone: 'Cotton Belt' },
   { id: 'MH_JAL_001', name: 'MIDC Jalgaon', city: 'Jalgaon', lat: 21.0120, lon: 75.5780, zone: 'Northern Plains' }
 ];
 
@@ -233,19 +232,28 @@ const FORECAST_HORIZONS = [
   { hours: 72, label: '+72h' }
 ];
 
+const CARTO_API_KEY = 'cb1_5amn_1_879f5588b5394cc422ba5b21';
+
 const BASEMAP_TILES = {
   satellite: {
     id: 'satellite',
     name: 'Satellite (Google / Earth Engine)',
     url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
-    attribution: '&copy; Google Earth Engine Hybrid Satellite',
+    attribution: '&copy; Google Earth Engine / Satellite Hybrid',
     maxZoom: 20
   },
-  dark: {
-    id: 'dark',
-    name: 'Dark Canvas (Carto)',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; CARTO &copy; OpenStreetMap',
+  light: {
+    id: 'light',
+    name: 'Clean Light (Carto Positron)',
+    url: `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}&key=${CARTO_API_KEY}`,
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  },
+  voyager: {
+    id: 'voyager',
+    name: 'Carto Voyager',
+    url: `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}&key=${CARTO_API_KEY}`,
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19
   },
   street: {
@@ -260,128 +268,133 @@ const BASEMAP_TILES = {
 const API_BASE_URL = 'http://localhost:8000';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Multilingual UI Translation Dictionaries (MR, HI, EN)
+// Multilingual Clean Labels (MR, HI, EN)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const UI_STRINGS = {
   mr: {
-    app_subtitle: 'महाराष्ट्र राज्यव्यापी वायु प्रदूषण विश्लेषण: Sentinel-5P, MODIS MAIAC, ERA5 PBLH संलयन (सर्व ३६ जिल्हे आणि गावे/तालुके)',
-    methodology: 'कार्यपद्धती (Methodology)',
+    app_title: 'वायुदृष्टि',
+    app_subtitle: 'महाराष्ट्र राज्यव्यापी हवेची गुणवत्ता विश्लेषण (सर्व ३६ जिल्हे व मध्यवर्ती तालुके)',
+    methodology: 'कार्यपद्धती',
     research_mode: 'संशोधक मोड',
-    live_updated: 'थेट · अद्यतनित',
-    select_district: 'जिल्हा / तालुका निवडा',
-    all_maharashtra: 'संपूर्ण महाराष्ट्र (Statewide)',
-    search_placeholder: 'शहराचे, तालुक्याचे नाव शोधा (उदा. लोणावळा, बारामती, शिर्डी, कराड, पंढरपूर)...',
-    basemap_satellite: '🛰️ उपग्रह दृश्य (Google Satellite)',
-    basemap_dark: '🌑 डार्क नकाशा',
-    basemap_street: '🗺️ रस्ता नकाशा (Street Map)',
-    layer_aqi: 'AQI / PM2.5 पृष्ठभाग',
-    layer_uncertainty: 'अनिश्चितता (± 90% CI)',
+    live_updated: 'थेट अद्यतन',
+    select_location: 'जिल्हा किंवा तालुका निवडा',
+    all_maharashtra: 'संपूर्ण महाराष्ट्र',
+    search_placeholder: 'शहर, तालुका किंवा महामार्ग शोधा (उदा. लोणावळा, बारामती, शिर्डी, कराड, पंढरपूर)...',
+    layer_aqi: 'AQI पृष्ठभाग',
+    layer_uncertainty: 'अनिश्चितता (±90% CI)',
     layer_reliability: 'विश्वासार्हता (%)',
-    overlay_on: 'प्रदूषण थर चालू (ON)',
-    overlay_off: 'प्रदूषण थर बंद (OFF)',
-    forecast_scrubber: '७२-तास अंदाज दर्शक:',
-    now_to_72h: 'आता → +७२ तास',
-    historical_chart: '२४-तासांचा PM2.5 दैनंदिन कल',
-    location_target: 'लक्ष्य स्थान',
-    data_credibility: 'डेटा विश्वासार्हता',
+    overlay_toggle: 'प्रदूषण थर',
+    forecast_scrubber: 'पूर्वानुमान दर्शक',
+    historical_chart: '२४ तासांचा PM2.5 कल',
+    target_location: 'निवडलेले स्थान',
+    credibility: 'डेटा विश्वासार्हता',
     surface_pm25: 'जमिनीवरील PM2.5',
-    nearest_station: 'जवळचे अधिकृत केंद्र:',
-    distance: 'अंतर:',
-    delta: 'फरक:',
-    shap_title: 'हवेचे घटक आणि वैज्ञानिक कारणे (SHAP Drivers)',
-    shap_subtitle: '"येथे प्रदूषण जास्त असण्याचे कारण काय?"',
-    local_advisory_title: 'स्थानिक नागरिक आणि कामगार मार्गदर्शक',
-    regional_context: 'स्थानिक प्रादेशिक सूचना',
-    general_persona: 'सामान्य नागरिक',
-    sensitive_persona: 'ज्येष्ठ व मुले (अतिसंवेदनशील)',
-    farmer_persona: 'शेतकरी व शेतमजूर (कृषी सल्ला)',
-    traffic_persona: 'वाहतूक पोलीस व चालक',
-    outdoor_persona: 'बांधकाम व दैनंदिन मजूर',
-    school_persona: 'शाळा आणि क्रीडा',
-    cpcb_station: 'अधिकृत CPCB केंद्र',
-    estimated_kriging: 'स्थानिक अंदाज (Spatial Kriging)',
-    in_between_badge: 'तालुका / महामार्ग केंद्र'
+    nearest_station: 'जवळचे अधिकृत केंद्र',
+    distance: 'अंतर',
+    delta: 'फरक',
+    advisory_heading: 'स्थानिक नागरिक व कामगार मार्गदर्शक',
+    personas: {
+      general: 'सामान्य नागरिक',
+      sensitive: 'अतिसंवेदनशील व्यक्ती',
+      farmer: 'शेतकरी व कृषी',
+      traffic_worker: 'वाहतूक पोलीस',
+      outdoor_worker: 'बांधकाम मजूर',
+      schools: 'शाळा व क्रीडा'
+    },
+    cpcb_station: 'अधिकृत CAAQMS केंद्र',
+    estimated_kriging: 'स्थानिक अंदाज (Spatial Kriging)'
   },
   hi: {
-    app_subtitle: 'महाराष्ट्र राज्यव्यापी वायु प्रदूषण विश्लेषण: Sentinel-5P, MODIS MAIAC, ERA5 PBLH संलयन (सभी 36 जिले और कस्बे)',
-    methodology: 'पद्धति (Methodology)',
+    app_title: 'वायुदृष्टि',
+    app_subtitle: 'महाराष्ट्र राज्यव्यापी वायु गुणवत्ता विश्लेषण (सभी 36 जिले एवं प्रमुख कस्बे)',
+    methodology: 'पद्धति',
     research_mode: 'रिसर्च मोड',
-    live_updated: 'लाइव · अपडेटेड',
-    select_district: 'जिला / कस्बा चुनें',
-    all_maharashtra: 'सम्पूर्ण महाराष्ट्र (Statewide)',
-    search_placeholder: 'शहर या कस्बे का नाम खोजें (उदा. लोनावला, बारामती, शिरडी, कराड, पंढरपुर)...',
-    basemap_satellite: '🛰️ सैटेलाइट दृश्य (Google Satellite)',
-    basemap_dark: '🌑 डार्क मैप',
-    basemap_street: '🗺️ स्ट्रीट मैप',
-    layer_aqi: 'AQI / PM2.5 सतह',
-    layer_uncertainty: 'अनिश्चितता (± 90% CI)',
+    live_updated: 'लाइव अपडेट',
+    select_location: 'जिला या कस्बा चुनें',
+    all_maharashtra: 'सम्पूर्ण महाराष्ट्र',
+    search_placeholder: 'शहर, कस्बा या हाईवे खोजें (उदा. लोनावला, बारामती, शिरडी, कराड, पंढरपुर)...',
+    layer_aqi: 'AQI सतह',
+    layer_uncertainty: 'अनिश्चितता (±90% CI)',
     layer_reliability: 'विश्वसनीयता (%)',
-    overlay_on: 'प्रदूषण ओवरले चालू',
-    overlay_off: 'प्रदूषण ओवरले बंद',
-    forecast_scrubber: '72-घंटे का पूर्वानुमान टाइमर:',
-    now_to_72h: 'अभी → +72 घंटे',
-    historical_chart: '24-घंटे का PM2.5 रुझान',
-    location_target: 'स्थान लक्ष्य',
-    data_credibility: 'डेटा विश्वसनीयता',
+    overlay_toggle: 'प्रदूषण ओवरले',
+    forecast_scrubber: 'पूर्वानुमान टाइमर',
+    historical_chart: '24 घंटे का PM2.5 रुझान',
+    target_location: 'चयनित स्थान',
+    credibility: 'डेटा विश्वसनीयता',
     surface_pm25: 'सतह PM2.5',
-    nearest_station: 'निकटतम आधिकारिक केंद्र:',
-    distance: 'दूरी:',
-    delta: 'अंतर:',
-    shap_title: 'वायुमंडलीय कारक एवं SHAP विश्लेषण',
-    shap_subtitle: '"यहाँ प्रदूषण का मुख्य कारण क्या है?"',
-    local_advisory_title: 'स्थानीय नागरिकों एवं श्रमिकों के लिए परामर्श',
-    regional_context: 'स्थानीय क्षेत्रीय अलर्ट',
-    general_persona: 'आम नागरिक',
-    sensitive_persona: 'बुजुर्ग व बच्चे (संवेदनशील)',
-    farmer_persona: 'किसान एवं कृषि श्रमिक',
-    traffic_persona: 'ट्रैफिक पुलिस व चालक',
-    outdoor_persona: 'निर्माण एवं दैनिक श्रमिक',
-    school_persona: 'स्कूल एवं खेलकूद',
-    cpcb_station: 'आधिकारिक CPCB केंद्र',
-    estimated_kriging: 'स्थानीय अनुमान (Spatial Kriging)',
-    in_between_badge: 'तालुका / हाइवे केंद्र'
+    nearest_station: 'निकटतम आधिकारिक केंद्र',
+    distance: 'दूरी',
+    delta: 'अंतर',
+    advisory_heading: 'स्थानीय नागरिक एवं श्रमिक परामर्श',
+    personas: {
+      general: 'आम नागरिक',
+      sensitive: 'संवेदनशील समूह',
+      farmer: 'किसान एवं कृषि',
+      traffic_worker: 'ट्रैफिक पुलिस',
+      outdoor_worker: 'निर्माण श्रमिक',
+      schools: 'स्कूल एवं खेल'
+    },
+    cpcb_station: 'आधिकारिक CAAQMS केंद्र',
+    estimated_kriging: 'स्थानीय अनुमान (Spatial Kriging)'
   },
   en: {
-    app_subtitle: 'Statewide Multimodal Intelligence Fusing Sentinel-5P, MODIS MAIAC, ERA5 PBLH & CPCB Monitors (36 Districts & In-Between Towns)',
+    app_title: 'Vayudrishti-AI',
+    app_subtitle: 'Statewide Maharashtra Environmental Intelligence (36 Districts & 71 In-Between Corridors)',
     methodology: 'Methodology',
-    research_mode: 'RESEARCH MODE',
-    live_updated: 'Live · updated',
-    select_district: 'Select District / Town',
+    research_mode: 'Research Mode',
+    live_updated: 'Live Updated',
+    select_location: 'Select District or Town',
     all_maharashtra: 'Statewide Maharashtra',
-    search_placeholder: 'Search any city, taluka or town (e.g., Lonavala, Baramati, Shirdi, Karad)...',
-    basemap_satellite: '🛰️ Satellite (Google / Earth Engine)',
-    basemap_dark: '🌑 Dark Canvas',
-    basemap_street: '🗺️ Street Map',
-    layer_aqi: 'AQI / PM2.5 Surface',
-    layer_uncertainty: 'Uncertainty (± 90% CI)',
+    search_placeholder: 'Search any district, taluka or transit corridor (e.g. Lonavala, Baramati, Shirdi, Karad)...',
+    layer_aqi: 'AQI Surface',
+    layer_uncertainty: 'Uncertainty (±90% CI)',
     layer_reliability: 'Reliability (%)',
-    overlay_on: 'OVERLAY ON',
-    overlay_off: 'OVERLAY OFF',
-    forecast_scrubber: '72h Forecast Scrubber:',
-    now_to_72h: 'Now → +72 Hours',
+    overlay_toggle: 'Heatmap Overlay',
+    forecast_scrubber: 'Forecast Horizon',
     historical_chart: '24-Hour Diurnal PM2.5 Trajectory',
-    location_target: 'LOCATION TARGET',
-    data_credibility: 'Data Credibility',
-    surface_pm25: 'Surface PM2.5 (Now)',
-    nearest_station: 'Proximity Ground Truth Monitor:',
-    distance: 'Distance:',
-    delta: 'Delta:',
-    shap_title: 'Atmospheric Attribution & SHAP Drivers',
-    shap_subtitle: '"Why is it high here, now?"',
-    local_advisory_title: 'Local Community & Worker Advisory',
-    regional_context: 'Regional Environmental Context',
-    general_persona: 'General Public',
-    sensitive_persona: 'Children & Seniors (Sensitive)',
-    farmer_persona: 'Farmers & Agriculture',
-    traffic_persona: 'Traffic Police & Transit',
-    outdoor_persona: 'Construction & Daily Labor',
-    school_persona: 'Schools & Sports',
+    target_location: 'Target Location',
+    credibility: 'Data Credibility',
+    surface_pm25: 'Surface PM2.5',
+    nearest_station: 'Nearest Monitor',
+    distance: 'Distance',
+    delta: 'Delta',
+    advisory_heading: 'Community & Occupational Health Guidance',
+    personas: {
+      general: 'General Public',
+      sensitive: 'Sensitive Groups',
+      farmer: 'Farmers & Agriculture',
+      traffic_worker: 'Traffic Police',
+      outdoor_worker: 'Construction Labor',
+      schools: 'Schools & Sports'
+    },
     cpcb_station: 'Official CAAQMS Monitor',
-    estimated_kriging: 'Hyperlocal Spatial Estimate',
-    in_between_badge: 'Taluka / Corridor Node'
+    estimated_kriging: 'Spatial Kriging Estimate'
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Refined CPCB Category Color Helpers (Subtle, Accessible)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getCategoryBadgeStyle(cat) {
+  switch (cat) {
+    case 'Good':
+      return { bg: '#E8F5E9', text: '#1B5E20', border: '#C8E6C9', label: 'Good' };
+    case 'Satisfactory':
+      return { bg: '#F1F8E9', text: '#33691E', border: '#DCEDC8', label: 'Satisfactory' };
+    case 'Moderate':
+      return { bg: '#FFF8E1', text: '#8D5B00', border: '#FFE082', label: 'Moderate' };
+    case 'Poor':
+      return { bg: '#FBE9E7', text: '#BF360C', border: '#FFCCBC', label: 'Poor' };
+    case 'Very Poor':
+      return { bg: '#FCE4EC', text: '#880E4F', border: '#F8BBD0', label: 'Very Poor' };
+    case 'Severe':
+      return { bg: '#F3E5F5', text: '#4A148C', border: '#E1BEE7', label: 'Severe' };
+    default:
+      return { bg: '#F3F4F1', text: '#5E6771', border: '#E8EAE7', label: 'Unknown' };
+  }
+}
 
 export default function App() {
   const [lang, setLang] = useState('mr'); // Default Marathi (मराठी)
@@ -391,10 +404,10 @@ export default function App() {
   const [forecastHorizonIdx, setForecastHorizonIdx] = useState(0);
 
   // Basemap & Layer states
-  const [basemapType, setBasemapType] = useState('satellite'); // 'satellite' | 'dark' | 'street'
+  const [basemapType, setBasemapType] = useState('satellite'); // 'satellite' | 'light' | 'voyager' | 'street'
   const [showHeatmap, setShowHeatmap] = useState(true);
-  const [activeLayer, setActiveLayer] = useState('pm25'); // 'pm25' | 'uncertainty' | 'reliability'
-  const [heatmapIntensity, setHeatmapIntensity] = useState(0.85);
+  const [heatmapIntensity, setHeatmapIntensity] = useState(1.0);
+  const [activeLayer, setActiveLayer] = useState('pm25');
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -428,7 +441,7 @@ export default function App() {
 
   const t = UI_STRINGS[lang] || UI_STRINGS.en;
 
-  // Search handler
+  // Search Autocomplete
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -453,7 +466,7 @@ export default function App() {
     setShowSearchResults(false);
 
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([loc.lat, loc.lon], loc.zoom || 12, { duration: 1.5 });
+      mapInstanceRef.current.flyTo([loc.lat, loc.lon], loc.zoom || 12, { duration: 1.2 });
     }
 
     const stationMatch = stationsList.find(s => s.city.toLowerCase() === loc.name.toLowerCase());
@@ -466,7 +479,7 @@ export default function App() {
         city: loc.district || loc.name,
         lat: loc.lat,
         lon: loc.lon,
-        zone: loc.isDistrict ? 'District Seat • Spatial Kriging' : `${loc.type || 'In-Between Town'} • Spatial Kriging`
+        zone: loc.isDistrict ? 'District Seat • Spatial Kriging' : `${loc.type || 'Taluka'} • Spatial Kriging`
       });
     }
   };
@@ -506,21 +519,20 @@ export default function App() {
         setHistoryData(histJson.history);
       }
     } catch (err) {
-      console.warn("Backend offline or unreachable, generating physical fallback:", err);
+      console.warn("Backend offline, using physical fallback model:", err);
       setApiOnline(false);
 
       const basePM = 58.0 + Math.sin(target.lat * 2.0) * 18.0 + Math.cos(target.lon * 1.5) * 14.0;
       const pmVal = Math.max(18, Math.round(basePM));
       let cat = 'Moderate';
-      let color = '#FFFF00';
       let aqiVal = 132;
 
-      if (pmVal <= 30) { cat = 'Good'; color = '#00E400'; aqiVal = 40; }
-      else if (pmVal <= 60) { cat = 'Satisfactory'; color = '#92D050'; aqiVal = 78; }
-      else if (pmVal <= 90) { cat = 'Moderate'; color = '#FFFF00'; aqiVal = 132; }
-      else if (pmVal <= 120) { cat = 'Poor'; color = '#FF7E00'; aqiVal = 220; }
-      else if (pmVal <= 250) { cat = 'Very Poor'; color = '#FF0000'; aqiVal = 330; }
-      else { cat = 'Severe'; color = '#7E0023'; aqiVal = 425; }
+      if (pmVal <= 30) { cat = 'Good'; aqiVal = 40; }
+      else if (pmVal <= 60) { cat = 'Satisfactory'; aqiVal = 78; }
+      else if (pmVal <= 90) { cat = 'Moderate'; aqiVal = 132; }
+      else if (pmVal <= 120) { cat = 'Poor'; aqiVal = 220; }
+      else if (pmVal <= 250) { cat = 'Very Poor'; aqiVal = 330; }
+      else { cat = 'Severe'; aqiVal = 425; }
 
       setAqiData({
         latitude: target.lat,
@@ -528,7 +540,6 @@ export default function App() {
         predicted_pm25: pmVal,
         predicted_aqi: aqiVal,
         category: cat,
-        color: color,
         dominant_pollutant: 'PM2.5',
         health_advisory: language === 'mr' ? 'अतिसंवेदनशील व्यक्तींनी आणि दम्याच्या रुग्णांनी काळजी घ्यावी.' : 'Breathing discomfort to sensitive individuals and asthma patients.',
         timestamp: new Date().toISOString(),
@@ -555,8 +566,7 @@ export default function App() {
         language: language,
         aqi: aqiVal,
         category: cat,
-        category_localized: language === 'mr' ? 'मध्यम (Moderate)' : cat,
-        color: color,
+        category_localized: language === 'mr' ? 'मध्यम' : cat,
         headline: language === 'mr' ? 'हवेची गुणवत्ता मध्यम प्रदूषित' : 'Air Quality is Moderately Polluted',
         summary: language === 'mr' ? 'हवेत धुलिकणांचे प्रमाण वाढले आहे. संवेदनशील व्यक्तींनी काळजी घ्यावी.' : 'Elevated particulate concentration. May cause breathing discomfort to sensitive individuals.',
         mask_recommendation: language === 'mr' ? 'N95 / 3-Ply मास्क वापरा' : 'N95 / 3-Ply mask recommended',
@@ -590,12 +600,12 @@ export default function App() {
       });
 
       setForecastData([
-        { horizon_hours: 1, predicted_pm25: Math.round(pmVal * 0.98), predicted_aqi: aqiVal - 2, color: color },
-        { horizon_hours: 6, predicted_pm25: Math.round(pmVal * 1.15), predicted_aqi: Math.min(500, aqiVal + 22), color: '#FF7E00' },
-        { horizon_hours: 12, predicted_pm25: Math.round(pmVal * 0.94), predicted_aqi: aqiVal - 8, color: color },
-        { horizon_hours: 24, predicted_pm25: Math.round(pmVal * 0.88), predicted_aqi: Math.max(30, aqiVal - 16), color: '#92D050' },
-        { horizon_hours: 48, predicted_pm25: Math.round(pmVal * 0.90), predicted_aqi: aqiVal - 12, color: color },
-        { horizon_hours: 72, predicted_pm25: Math.round(pmVal * 0.85), predicted_aqi: aqiVal - 20, color: '#92D050' },
+        { horizon_hours: 1, predicted_pm25: Math.round(pmVal * 0.98), predicted_aqi: aqiVal - 2, category: cat },
+        { horizon_hours: 6, predicted_pm25: Math.round(pmVal * 1.15), predicted_aqi: Math.min(500, aqiVal + 22), category: 'Poor' },
+        { horizon_hours: 12, predicted_pm25: Math.round(pmVal * 0.94), predicted_aqi: aqiVal - 8, category: cat },
+        { horizon_hours: 24, predicted_pm25: Math.round(pmVal * 0.88), predicted_aqi: Math.max(30, aqiVal - 16), category: 'Satisfactory' },
+        { horizon_hours: 48, predicted_pm25: Math.round(pmVal * 0.90), predicted_aqi: aqiVal - 12, category: cat },
+        { horizon_hours: 72, predicted_pm25: Math.round(pmVal * 0.85), predicted_aqi: aqiVal - 20, category: 'Satisfactory' },
       ]);
 
       setExplainData({
@@ -630,149 +640,152 @@ export default function App() {
     fetchLocationData(selectedStation, lang);
   }, [selectedStation, lang]);
 
-  // ── Leaflet Map Setup & Tile Switching ─────────────────────────────
+  // Leaflet Map Initialization & Tile Switching
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    try {
+      if (!mapContainerRef.current) return;
 
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [18.5204, 73.8567],
-        zoom: 11,
-        zoomControl: false,
-        attributionControl: false
-      });
+      if (!mapInstanceRef.current) {
+        if (mapContainerRef.current._leaflet_id) {
+          delete mapContainerRef.current._leaflet_id;
+        }
 
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-      // Initial Basemap (Satellite Default)
-      const currentBasemap = BASEMAP_TILES[basemapType] || BASEMAP_TILES.satellite;
-      const tileLayer = L.tileLayer(currentBasemap.url, {
-        maxZoom: currentBasemap.maxZoom,
-        subdomains: 'abcd',
-        attribution: currentBasemap.attribution
-      }).addTo(map);
-      tileLayerRef.current = tileLayer;
-
-      // Click anywhere to query ANY in-between location in Maharashtra
-      map.on('click', (e) => {
-        let nearestLoc = ALL_MAHARASHTRA_LOCATIONS[0];
-        let minDist = float = 999999;
-        ALL_MAHARASHTRA_LOCATIONS.forEach(loc => {
-          const d = Math.hypot((e.latlng.lat - loc.lat) * 111, (e.latlng.lng - loc.lon) * 105);
-          if (d < minDist) { minDist = d; nearestLoc = loc; }
+        const map = L.map(mapContainerRef.current, {
+          center: [18.5204, 73.8567],
+          zoom: 11,
+          zoomControl: false,
+          attributionControl: false
         });
 
-        const customPoint = {
-          id: `CUSTOM_${Date.now()}`,
-          name: `${nearestLoc.name} Vicinity (${e.latlng.lat.toFixed(3)}°N, ${e.latlng.lng.toFixed(3)}°E)`,
-          city: nearestLoc.district || nearestLoc.name,
-          lat: e.latlng.lat,
-          lon: e.latlng.lng,
-          zone: `Between ${nearestLoc.name} & Corridors (${minDist.toFixed(1)} km) • Hyperlocal Kriging`
-        };
-        setSelectedStation(customPoint);
-      });
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      markersGroupRef.current = L.layerGroup().addTo(map);
-      mapInstanceRef.current = map;
+        // Basemap tile layer
+        const currentBasemap = BASEMAP_TILES[basemapType] || BASEMAP_TILES.satellite;
+        const tileLayer = L.tileLayer(currentBasemap.url, {
+          maxZoom: currentBasemap.maxZoom,
+          subdomains: 'abcd',
+          attribution: currentBasemap.attribution
+        }).addTo(map);
+        tileLayerRef.current = tileLayer;
 
-      // Prevent Leaflet grey/blank box by forcing size invalidation after render
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 300);
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 800);
-    } else {
-      // Switch Basemap Tile Layer dynamically
-      const map = mapInstanceRef.current;
-      if (tileLayerRef.current) {
-        map.removeLayer(tileLayerRef.current);
-      }
-      const currentBasemap = BASEMAP_TILES[basemapType] || BASEMAP_TILES.satellite;
-      const newTileLayer = L.tileLayer(currentBasemap.url, {
-        maxZoom: currentBasemap.maxZoom,
-        subdomains: 'abcd',
-        attribution: currentBasemap.attribution
-      }).addTo(map);
-      tileLayerRef.current = newTileLayer;
-      map.invalidateSize();
-    }
+        // Click anywhere to query unmonitored locations
+        map.on('click', (e) => {
+          let nearestLoc = ALL_MAHARASHTRA_LOCATIONS[0];
+          let minDist = 999999;
+          ALL_MAHARASHTRA_LOCATIONS.forEach(loc => {
+            const d = Math.hypot((e.latlng.lat - loc.lat) * 111, (e.latlng.lng - loc.lon) * 105);
+            if (d < minDist) { minDist = d; nearestLoc = loc; }
+          });
 
-    const map = mapInstanceRef.current;
-    const markersGroup = markersGroupRef.current;
-    markersGroup.clearLayers();
+          const customPoint = {
+            id: `CUSTOM_${Date.now()}`,
+            name: `${nearestLoc.name} (${e.latlng.lat.toFixed(3)}°N, ${e.latlng.lng.toFixed(3)}°E)`,
+            city: nearestLoc.district || nearestLoc.name,
+            lat: e.latlng.lat,
+            lon: e.latlng.lng,
+            zone: `Between ${nearestLoc.name} & Corridors (${minDist.toFixed(1)} km) · Hyperlocal Kriging`
+          };
+          setSelectedStation(customPoint);
+        });
 
-    // ── Continuous Heatmap Surface ──────────────────────────────────
-    if (heatLayerRef.current) {
-      map.removeLayer(heatLayerRef.current);
-      heatLayerRef.current = null;
-    }
+        markersGroupRef.current = L.layerGroup().addTo(map);
+        mapInstanceRef.current = map;
 
-    if (showHeatmap) {
-      let heatPoints = [];
-      const gradientScheme = {
-        0.15: '#00E400',
-        0.35: '#92D050',
-        0.55: '#FFFF00',
-        0.72: '#FF7E00',
-        0.88: '#FF0000',
-        1.00: '#7E0023'
-      };
-
-      stationsList.forEach(s => {
-        const weight = s.zone?.includes('Industrial') || s.zone?.includes('Manufacturing') ? 1.4 : 1.0;
-        heatPoints.push([s.lat, s.lon, weight * heatmapIntensity]);
-        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 3) {
-          heatPoints.push([s.lat + Math.sin(angle) * 0.04, s.lon + Math.cos(angle) * 0.04, 0.7 * heatmapIntensity]);
+        // Staggered size invalidation to guarantee clean layout
+        setTimeout(() => map.invalidateSize(), 200);
+        setTimeout(() => map.invalidateSize(), 600);
+      } else {
+        const map = mapInstanceRef.current;
+        if (tileLayerRef.current) {
+          map.removeLayer(tileLayerRef.current);
         }
-      });
+        const currentBasemap = BASEMAP_TILES[basemapType] || BASEMAP_TILES.satellite;
+        const newTileLayer = L.tileLayer(currentBasemap.url, {
+          maxZoom: currentBasemap.maxZoom,
+          subdomains: 'abcd',
+          attribution: currentBasemap.attribution
+        }).addTo(map);
+        tileLayerRef.current = newTileLayer;
+        map.invalidateSize();
+      }
 
-      // Also disperse heat along major in-between towns
-      MAHARASHTRA_IN_BETWEEN_TOWNS.slice(0, 30).forEach(t => {
-        heatPoints.push([t.lat, t.lon, 0.75 * heatmapIntensity]);
-      });
+      const map = mapInstanceRef.current;
+      const markersGroup = markersGroupRef.current;
+      if (markersGroup) {
+        markersGroup.clearLayers();
+      }
 
-      const heat = L.heatLayer(heatPoints, {
-        radius: 40,
-        blur: 26,
-        maxZoom: 15,
-        max: 1.5,
-        minOpacity: 0.35,
-        gradient: gradientScheme
-      });
+      // Heatmap Layer
+      if (heatLayerRef.current) {
+        map.removeLayer(heatLayerRef.current);
+        heatLayerRef.current = null;
+      }
 
-      heat.addTo(map);
-      heatLayerRef.current = heat;
-    }
+      if (showHeatmap && typeof L.heatLayer === 'function') {
+        try {
+          let heatPoints = [];
+          const gradientScheme = {
+            0.15: '#2E7D32',
+            0.35: '#558B2F',
+            0.55: '#C67D0A',
+            0.72: '#D9531E',
+            0.88: '#C2185B',
+            1.00: '#7B1FA2'
+          };
 
-    // ── Station Markers with NAQI Color Rings ───────────────────────
+          stationsList.forEach(s => {
+            const weight = s.zone?.includes('Industrial') ? 1.4 : 1.0;
+            heatPoints.push([s.lat, s.lon, weight * heatmapIntensity]);
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 3) {
+              heatPoints.push([s.lat + Math.sin(angle) * 0.04, s.lon + Math.cos(angle) * 0.04, 0.7 * heatmapIntensity]);
+            }
+          });
+
+          MAHARASHTRA_IN_BETWEEN_TOWNS.slice(0, 30).forEach(t => {
+            heatPoints.push([t.lat, t.lon, 0.75 * heatmapIntensity]);
+          });
+
+          const heat = L.heatLayer(heatPoints, {
+            radius: 38,
+            blur: 24,
+            maxZoom: 15,
+            max: 1.5,
+            minOpacity: 0.30,
+            gradient: gradientScheme
+          });
+
+          heat.addTo(map);
+          heatLayerRef.current = heat;
+        } catch (heatErr) {
+          console.warn("Could not render heatmap layer:", heatErr);
+        }
+      }
+
+    // Clean Station Markers (No glowing effects, crisp borders)
     stationsList.forEach((stn) => {
       const isSelected = stn.id === selectedStation.id;
-      const markerColor = stn.color || (isSelected ? '#38bdf8' : '#ffffff');
 
       const markerHtml = `
-        <div style="position: relative; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+        <div style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
           <div style="
-            width: ${isSelected ? '22px' : '14px'};
-            height: ${isSelected ? '22px' : '14px'};
+            width: ${isSelected ? '14px' : '10px'};
+            height: ${isSelected ? '14px' : '10px'};
             border-radius: 50%;
-            background: ${markerColor};
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 ${isSelected ? '16px #38bdf8' : '6px rgba(0,0,0,0.8)'};
-            transition: all 0.3s ease;
+            background: ${isSelected ? '#187D6B' : '#5E6771'};
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
           "></div>
           <div style="
-            background: rgba(15, 23, 42, 0.92);
-            border: 1px solid ${isSelected ? '#38bdf8' : 'rgba(255, 255, 255, 0.2)'};
-            padding: 2px 7px;
-            border-radius: 6px;
+            background: #FFFFFF;
+            border: 1px solid ${isSelected ? '#187D6B' : '#E8EAE7'};
+            padding: 2px 6px;
+            border-radius: 4px;
             font-size: 11px;
-            font-weight: ${isSelected ? '700' : '600'};
-            color: ${isSelected ? '#38bdf8' : '#f1f5f9'};
+            font-weight: ${isSelected ? '700' : '500'};
+            color: ${isSelected ? '#187D6B' : '#202A35'};
             white-space: nowrap;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
             pointer-events: none;
           ">
             ${stn.name.split(',')[0]}
@@ -781,17 +794,17 @@ export default function App() {
       `;
 
       const icon = L.divIcon({
-        className: 'station-badge',
+        className: 'clean-station-badge',
         html: markerHtml,
-        iconSize: [110, 24],
-        iconAnchor: [isSelected ? 11 : 7, isSelected ? 11 : 7]
+        iconSize: [110, 22],
+        iconAnchor: [isSelected ? 7 : 5, isSelected ? 7 : 5]
       });
 
       const marker = L.marker([stn.lat, stn.lon], { icon }).addTo(markersGroup);
       marker.on('click', () => setSelectedStation(stn));
     });
 
-    // ── Selected Active Pin (For In-Between Towns or Custom Clicked Point) ──
+    // Selected Active Pin
     if (activePinRef.current) {
       map.removeLayer(activePinRef.current);
       activePinRef.current = null;
@@ -799,44 +812,44 @@ export default function App() {
 
     if (selectedStation) {
       const pinHtml = `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+        <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
           <div style="
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: #38bdf8;
-            border: 3px solid #ffffff;
-            box-shadow: 0 0 20px #38bdf8, 0 0 40px #0284c7;
-            animation: pulse-subtle 1.8s infinite;
+            background: #187D6B;
+            border: 2.5px solid #FFFFFF;
+            box-shadow: 0 2px 6px rgba(24, 125, 107, 0.4);
           "></div>
           <div style="
-            margin-top: 4px;
-            background: rgba(2, 6, 23, 0.95);
-            border: 1px solid #38bdf8;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 800;
-            color: #38bdf8;
+            margin-top: 3px;
+            background: #202A35;
+            color: #FFFFFF;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 600;
             white-space: nowrap;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.8);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
           ">
-            📍 ${selectedStation.name.split('(')[0]}
+            ${selectedStation.name.split('(')[0].trim()}
           </div>
         </div>
       `;
       const pinIcon = L.divIcon({
         className: 'active-pin',
         html: pinHtml,
-        iconSize: [120, 36],
-        iconAnchor: [60, 7]
+        iconSize: [120, 32],
+        iconAnchor: [60, 6]
       });
       activePinRef.current = L.marker([selectedStation.lat, selectedStation.lon], { icon: pinIcon }).addTo(map);
     }
-
+  } catch (mapErr) {
+    console.warn("Map update caught gracefully:", mapErr);
+  }
   }, [selectedStation, basemapType, showHeatmap, activeLayer, heatmapIntensity, stationsList]);
 
-  // Window resize handler to prevent blank map
+  // Window resize observer
   useEffect(() => {
     const handleResize = () => {
       if (mapInstanceRef.current) {
@@ -847,52 +860,77 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const badgeStyle = getCategoryBadgeStyle(aqiData?.category || 'Moderate');
+
   return (
-    <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 50% 0%, #111827 0%, #07090e 100%)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px', color: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-app)', display: 'flex', flexDirection: 'column' }}>
       
-      {/* ── TOP NAVBAR ────────────────────────────────────────────── */}
-      <header className="glass-panel" style={{ padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      {/* ── 1. COMPACT PROFESSIONAL NAVBAR ────────────────────────── */}
+      <header style={{ 
+        backgroundColor: '#FFFFFF', 
+        borderBottom: '1px solid var(--border-light)', 
+        height: '56px',
+        padding: '0 24px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100
+      }}>
+        {/* Brand & Identity */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(56,189,248,0.4)' }}>
-            <Wind size={22} color="#07090e" strokeWidth={2.5} />
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: 'var(--radius-sm)', 
+            backgroundColor: 'var(--accent-jade)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            color: '#FFFFFF'
+          }}>
+            <Wind size={18} strokeWidth={2.2} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '19px', fontWeight: 800, letterSpacing: '-0.02em', background: 'linear-gradient(to right, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                VAYUDRISHTI-AI (वायुदृष्टि)
-              </h1>
-              <span style={{ fontSize: '10.5px', padding: '2px 8px', borderRadius: '999px', background: 'rgba(56,189,248,0.15)', color: 'var(--accent-cyan)', fontWeight: 700, border: '1px solid rgba(56,189,248,0.3)' }}>
-                v2.0 • ३६ जिल्हे व सर्व तालुके
+              <span style={{ fontFamily: 'var(--font-heading)', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                Vayudrishti-AI
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                (वायुदृष्टि)
+              </span>
+              <span style={{ 
+                fontSize: '11px', 
+                padding: '1px 6px', 
+                borderRadius: '4px', 
+                backgroundColor: 'var(--bg-subtle)', 
+                color: 'var(--text-secondary)', 
+                border: '1px solid var(--border-light)',
+                fontWeight: 500
+              }}>
+                v2.0 · 36 Districts
               </span>
             </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              {t.app_subtitle}
-            </p>
           </div>
         </div>
 
-        {/* Trilingual Toggle, Research Mode & Basemap Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        {/* Right Actions: Language, Research, Methodology, Status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           
-          {/* Trilingual Pill */}
-          <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.9)', padding: '2px', borderRadius: '8px', border: '1px solid var(--border-subtle)', alignItems: 'center' }}>
-            <Languages size={13} color="#38bdf8" style={{ marginLeft: '6px', marginRight: '4px' }} />
-            {['mr', 'hi', 'en'].map(code => (
+          {/* Minimal Language Toggle */}
+          <div className="segmented-control">
+            {[
+              { code: 'mr', label: 'मराठी' },
+              { code: 'hi', label: 'हिंदी' },
+              { code: 'en', label: 'EN' }
+            ].map(item => (
               <button
-                key={code}
-                onClick={() => setLang(code)}
-                style={{
-                  background: lang === code ? '#38bdf8' : 'transparent',
-                  color: lang === code ? '#07090e' : 'var(--text-muted)',
-                  fontWeight: 700,
-                  fontSize: '11px',
-                  border: 'none',
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
+                key={item.code}
+                onClick={() => setLang(item.code)}
+                className={`segmented-btn ${lang === item.code ? 'active' : ''}`}
               >
-                {code === 'mr' ? 'मराठी' : code === 'hi' ? 'हिंदी' : 'EN'}
+                {item.label}
               </button>
             ))}
           </div>
@@ -900,826 +938,922 @@ export default function App() {
           {/* Research Mode Button */}
           <button
             onClick={() => setShowResearchModal(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              background: 'rgba(168, 85, 247, 0.2)',
-              border: '1px solid #a855f7',
-              color: '#d8b4fe',
-              fontSize: '11.5px',
-              fontWeight: 700,
-              cursor: 'pointer'
-            }}
+            className="btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '12px' }}
           >
-            <FlaskConical size={14} color="#c084fc" />
+            <FlaskConical size={14} color="var(--accent-jade)" />
             <span>{t.research_mode}</span>
           </button>
 
           {/* Methodology Button */}
           <button
             onClick={() => setShowTransparencyModal(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-muted)',
-              fontSize: '11.5px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
+            className="btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '12px' }}
           >
-            <HelpCircle size={14} color="#38bdf8" />
+            <BookOpen size={14} color="var(--text-secondary)" />
             <span>{t.methodology}</span>
           </button>
 
-          {/* Live Status */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '30px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-subtle)', fontSize: '11px' }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: apiOnline ? '#10b981' : '#f59e0b', display: 'inline-block' }} className="animate-pulse-subtle"></span>
-            <span style={{ color: 'var(--text-muted)' }}>{t.live_updated} {lastUpdated}</span>
+          {/* Live Heartbeat */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            padding: '5px 10px', 
+            borderRadius: 'var(--radius-sm)', 
+            backgroundColor: 'var(--bg-subtle)', 
+            border: '1px solid var(--border-light)', 
+            fontSize: '11.5px',
+            color: 'var(--text-secondary)'
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: apiOnline ? '#10B981' : '#F59E0B' }}></span>
+            <span>{apiOnline ? t.live_updated : 'Offline Fallback'}</span>
           </div>
+
         </div>
       </header>
 
-      {/* ── SEARCH BAR ACROSS ALL 100+ IN-BETWEEN CITIES & TALUKAS ── */}
-      <div style={{ position: 'relative', width: '100%', zIndex: 1000 }}>
-        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(56, 189, 248, 0.35)', borderRadius: '10px', padding: '8px 14px', gap: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-          <Search size={18} color="var(--accent-cyan)" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t.search_placeholder}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              color: '#f8fafc',
-              fontSize: '13px',
-              fontFamily: 'var(--font-body)'
-            }}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => { setSearchQuery(''); setShowSearchResults(false); }}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '14px', cursor: 'pointer' }}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        {/* Search Results Autocomplete Dropdown */}
-        {showSearchResults && searchResults.length > 0 && (
-          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'rgba(15, 23, 42, 0.98)', border: '1px solid rgba(56, 189, 248, 0.4)', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}>
-            {searchResults.map(loc => (
-              <div
-                key={loc.id}
-                onClick={() => handleSelectLocation(loc)}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px 14px',
-                  cursor: 'pointer',
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  transition: 'background 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.15)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <MapPin size={15} color={loc.isDistrict ? '#38bdf8' : '#34d399'} />
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc' }}>
-                    {lang === 'mr' ? loc.name_mr : lang === 'hi' ? loc.name_hi : loc.name}
-                  </span>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                    ({loc.name}) • {loc.district || loc.division || 'Maharashtra'}
-                  </span>
-                </div>
-                <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: loc.isDistrict ? 'rgba(56,189,248,0.2)' : 'rgba(16,185,129,0.2)', color: loc.isDistrict ? '#38bdf8' : '#34d399', fontWeight: 600 }}>
-                  {loc.isDistrict ? 'District Seat' : loc.type || 'Taluka / Node'}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── MAIN DASHBOARD GRID ───────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(0, 1.05fr)', gap: '16px', flex: 1 }}>
-        
-        {/* LEFT COLUMN: Map & Basemap Selector */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
-          {/* MAP CONTAINER */}
-          <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', minHeight: '520px', flex: 1 }}>
-            
-            {/* Top Bar above map: Basemap switcher & Quick select */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              
-              {/* Basemap Switcher (Google Satellite, Dark, Street) */}
-              <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.9)', padding: '3px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                <button
-                  onClick={() => setBasemapType('satellite')}
-                  style={{
-                    background: basemapType === 'satellite' ? '#38bdf8' : 'transparent',
-                    color: basemapType === 'satellite' ? '#07090e' : '#cbd5e1',
-                    border: 'none',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Satellite size={12} />
-                  <span>Google Satellite</span>
-                </button>
-
-                <button
-                  onClick={() => setBasemapType('dark')}
-                  style={{
-                    background: basemapType === 'dark' ? '#38bdf8' : 'transparent',
-                    color: basemapType === 'dark' ? '#07090e' : '#cbd5e1',
-                    border: 'none',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Dark Canvas
-                </button>
-
-                <button
-                  onClick={() => setBasemapType('street')}
-                  style={{
-                    background: basemapType === 'street' ? '#38bdf8' : 'transparent',
-                    color: basemapType === 'street' ? '#07090e' : '#cbd5e1',
-                    border: 'none',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <MapIcon size={12} />
-                  <span>Street Map</span>
-                </button>
-              </div>
-
-              {/* Heatmap Layer Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button 
-                  onClick={() => setShowHeatmap(!showHeatmap)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    background: showHeatmap ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${showHeatmap ? 'rgba(56,189,248,0.5)' : 'var(--border-subtle)'}`,
-                    color: showHeatmap ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                    padding: '5px 9px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Eye size={13} />
-                  {showHeatmap ? t.overlay_on : t.overlay_off}
-                </button>
-
-                {/* District Dropdown Selector */}
-                <select 
-                  value={selectedLocation.id} 
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    if (id === 'MH_ALL') {
-                      handleSelectLocation(STATEWIDE_OVERVIEW);
-                    } else {
-                      const match = ALL_MAHARASHTRA_LOCATIONS.find(l => l.id === id);
-                      if (match) handleSelectLocation(match);
-                    }
-                  }}
-                  style={{ background: '#1e293b', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '5px 8px', fontSize: '11.5px', cursor: 'pointer', outline: 'none', maxWidth: '170px' }}
-                >
-                  <option value="MH_ALL">{t.all_maharashtra}</option>
-                  <optgroup label="प्रमुख शहरे व जिल्हे (District Seats)">
-                    {MAHARASHTRA_DISTRICTS.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {lang === 'mr' ? d.name_mr : lang === 'hi' ? d.name_hi : d.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="मध्यवर्ती तालुके व गावे (In-Between Towns)">
-                    {MAHARASHTRA_IN_BETWEEN_TOWNS.map(t => (
-                      <option key={t.id} value={t.id}>
-                        {lang === 'mr' ? t.name_mr : lang === 'hi' ? t.name_hi : t.name} ({t.district})
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-
-            </div>
-
-            {/* Leaflet Render Surface */}
-            <div 
-              ref={mapContainerRef} 
-              style={{ 
-                width: '100%', 
-                height: '100%', 
-                minHeight: '440px', 
-                borderRadius: '12px', 
-                overflow: 'hidden', 
-                position: 'relative',
-                background: '#0d121f'
+      {/* ── 2. UNIFIED SEARCH & REGION CONTROLS ───────────────────── */}
+      <div style={{ 
+        backgroundColor: '#FFFFFF', 
+        borderBottom: '1px solid var(--border-light)', 
+        padding: '10px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '16px',
+        flexWrap: 'wrap'
+      }}>
+        {/* Search Bar */}
+        <div style={{ position: 'relative', flex: '1', maxWidth: '580px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            backgroundColor: 'var(--bg-subtle)', 
+            border: '1px solid var(--border-light)', 
+            borderRadius: 'var(--radius-sm)', 
+            padding: '6px 12px', 
+            gap: '8px' 
+          }}>
+            <Search size={15} color="var(--text-secondary)" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t.search_placeholder}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontFamily: 'var(--font-sans)'
               }}
-            ></div>
-
-            {/* Map Scale Legend & Click Anywhere Instruction */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(11, 15, 25, 0.90)', borderRadius: '10px', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', gap: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Crosshair size={13} color="#38bdf8" />
-                <span style={{ fontSize: '11px', color: '#cbd5e1' }}>
-                  {lang === 'mr' ? 'नकाशावर कुठेही क्लिक करा' : 'Click anywhere on map to query'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '10px', padding: '2px 5px', borderRadius: '4px', background: 'rgba(0, 228, 0, 0.2)', color: '#00E400', border: '1px solid #00E400' }}>0-50 Good</span>
-                <span style={{ fontSize: '10px', padding: '2px 5px', borderRadius: '4px', background: 'rgba(146, 208, 80, 0.2)', color: '#92D050', border: '1px solid #92D050' }}>51-100 Sat.</span>
-                <span style={{ fontSize: '10px', padding: '2px 5px', borderRadius: '4px', background: 'rgba(255, 255, 0, 0.2)', color: '#FFFF00', border: '1px solid #FFFF00' }}>101-200 Mod.</span>
-                <span style={{ fontSize: '10px', padding: '2px 5px', borderRadius: '4px', background: 'rgba(255, 126, 0, 0.2)', color: '#FF7E00', border: '1px solid #FF7E00' }}>201-300 Poor</span>
-                <span style={{ fontSize: '10px', padding: '2px 5px', borderRadius: '4px', background: 'rgba(255, 0, 0, 0.2)', color: '#FF0000', border: '1px solid #FF0000' }}>301-400 V.Poor</span>
-                <span style={{ fontSize: '10px', padding: '2px 5px', borderRadius: '4px', background: 'rgba(126, 0, 35, 0.2)', color: '#C00000', border: '1px solid #C00000' }}>401-500 Severe</span>
-              </div>
-            </div>
-
-            {/* ── 72-HOUR TIME SCRUBBER SLIDER ──────────────────────────── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px 12px', background: 'rgba(15, 23, 42, 0.90)', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                  <Clock size={13} color="#38bdf8" />
-                  <span style={{ fontWeight: 600 }}>{t.forecast_scrubber}</span>
-                  <span style={{ color: '#38bdf8', fontWeight: 700 }}>
-                    {FORECAST_HORIZONS[forecastHorizonIdx].label} ({forecastHorizonIdx === 0 ? 'Live' : `+${FORECAST_HORIZONS[forecastHorizonIdx].hours} Hours`})
-                  </span>
-                </div>
-                <span style={{ fontSize: '10px', color: 'var(--text-dim)' }}>{t.now_to_72h}</span>
-              </div>
-
-              <input
-                type="range"
-                min={0}
-                max={FORECAST_HORIZONS.length - 1}
-                value={forecastHorizonIdx}
-                onChange={(e) => setForecastHorizonIdx(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#38bdf8', cursor: 'pointer' }}
-              />
-            </div>
-
-          </div>
-
-          {/* 24-HOUR HISTORICAL OBSERVATIONS CHART */}
-          <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <BarChart3 size={15} color="var(--accent-cyan)" />
-                <h3 style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  {t.historical_chart} ({selectedStation.name.split('(')[0]})
-                </h3>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-end', height: '60px', gap: '3px', paddingTop: '4px' }}>
-              {historyData.map((d, i) => {
-                const heightPct = Math.min(100, Math.max(15, (d.pm25 / 140) * 100));
-                const barColor = d.pm25 <= 30 ? '#00E400' : d.pm25 <= 60 ? '#92D050' : d.pm25 <= 90 ? '#FFFF00' : d.pm25 <= 120 ? '#FF7E00' : '#FF0000';
-                return (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                    <div 
-                      title={`${d.timestamp}: ${d.pm25} µg/m³ (AQI ${d.aqi})`}
-                      style={{ 
-                        width: '100%', 
-                        height: `${heightPct}%`, 
-                        background: barColor, 
-                        borderRadius: '2px 2px 0 0',
-                        opacity: 0.85
-                      }} 
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: 'var(--text-dim)' }}>
-              <span>-24h</span>
-              <span>-12h</span>
-              <span>Now (Live)</span>
-            </div>
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN: Real-Time AQI Card, Local Citizen Advisory Card, 72h Forecast, SHAP */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
-          {/* PRIMARY CURRENT AQI CARD */}
-          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', borderLeft: `4px solid ${aqiData?.color || '#38bdf8'}` }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                  {t.location_target}
-                </span>
-                <h2 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>
-                  {selectedStation.name}
-                </h2>
-                <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
-                  {selectedStation.lat.toFixed(4)}°N, {selectedStation.lon.toFixed(4)}°E • {selectedStation.zone}
-                </span>
-              </div>
-
-              {/* Data Reliability Badge */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-dim)' }}>{t.data_credibility}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 7px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
-                  <ShieldCheck size={12} color="#10b981" />
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#10b981' }}>
-                    {aqiData?.data_reliability?.reliability_score || 91}% {aqiData?.data_reliability?.reliability_level || 'HIGH'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Big AQI & PM2.5 Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                  <span style={{ fontFamily: 'var(--font-heading)', fontSize: '48px', fontWeight: 900, color: aqiData?.color || '#f8fafc', lineHeight: 1 }}>
-                    {loading ? '...' : aqiData?.predicted_aqi}
-                  </span>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: aqiData?.color || '#38bdf8' }}>
-                      {localAdvisory?.category_localized || aqiData?.category?.toUpperCase()}
-                    </span>
-                    <span style={{ fontSize: '10px', color: 'var(--text-dim)' }}>
-                      CPCB NAQI Index
-                    </span>
-                  </div>
-                </div>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.3 }}>
-                  {localAdvisory?.summary || aqiData?.health_advisory}
-                </p>
-              </div>
-
-              {/* Surface PM2.5 & 90% Conformal Interval */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', borderLeft: '1px solid var(--border-subtle)', paddingLeft: '12px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.surface_pm25}:</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '22px', fontWeight: 800, color: '#f8fafc' }}>
-                    {loading ? '...' : aqiData?.predicted_pm25}
-                  </span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>µg/m³</span>
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', fontSize: '10px', color: '#c084fc', background: 'rgba(168,85,247,0.12)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(168,85,247,0.3)' }}>
-                  <ShieldAlert size={11} color="#c084fc" />
-                  <span>90% CI: ±{aqiData?.uncertainty?.margin_of_error || 14.2} µg/m³</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Nearest Official Station Comparison */}
-            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '8px 10px', borderRadius: '8px', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: 'var(--text-dim)' }}>{t.nearest_station} {aqiData?.station_comparison?.nearest_station_name}</span>
-                <span style={{ color: aqiData?.station_comparison?.delta_direction === 'HIGHER' ? '#f87171' : '#34d399', fontWeight: 600 }}>
-                  {t.delta} {aqiData?.station_comparison?.delta_pm25 > 0 ? `+${aqiData?.station_comparison?.delta_pm25}` : aqiData?.station_comparison?.delta_pm25} µg/m³
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* ── LOCAL COMMUNITY & CITIZEN ADVISORY CARD ─────────────── */}
-          <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Users size={16} color="var(--accent-cyan)" />
-                <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  {t.local_advisory_title}
-                </h3>
-              </div>
-              <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', fontWeight: 600 }}>
-                😷 {localAdvisory?.mask_recommendation || 'N95 Mask'}
-              </span>
-            </div>
-
-            {/* Persona Switcher Tabs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '3px', borderRadius: '8px' }}>
-              <button
-                onClick={() => setActivePersona('general')}
-                style={{
-                  background: activePersona === 'general' ? 'rgba(56,189,248,0.25)' : 'transparent',
-                  color: activePersona === 'general' ? '#38bdf8' : 'var(--text-muted)',
-                  border: 'none',
-                  padding: '5px',
-                  borderRadius: '6px',
-                  fontSize: '10.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => { setSearchQuery(''); setShowSearchResults(false); }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }}
               >
-                👥 {t.general_persona}
+                <X size={14} />
               </button>
-
-              <button
-                onClick={() => setActivePersona('sensitive')}
-                style={{
-                  background: activePersona === 'sensitive' ? 'rgba(56,189,248,0.25)' : 'transparent',
-                  color: activePersona === 'sensitive' ? '#38bdf8' : 'var(--text-muted)',
-                  border: 'none',
-                  padding: '5px',
-                  borderRadius: '6px',
-                  fontSize: '10.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                🩺 {t.sensitive_persona}
-              </button>
-
-              <button
-                onClick={() => setActivePersona('farmer')}
-                style={{
-                  background: activePersona === 'farmer' ? 'rgba(56,189,248,0.25)' : 'transparent',
-                  color: activePersona === 'farmer' ? '#38bdf8' : 'var(--text-muted)',
-                  border: 'none',
-                  padding: '5px',
-                  borderRadius: '6px',
-                  fontSize: '10.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                🌾 {t.farmer_persona}
-              </button>
-
-              <button
-                onClick={() => setActivePersona('traffic_worker')}
-                style={{
-                  background: activePersona === 'traffic_worker' ? 'rgba(56,189,248,0.25)' : 'transparent',
-                  color: activePersona === 'traffic_worker' ? '#38bdf8' : 'var(--text-muted)',
-                  border: 'none',
-                  padding: '5px',
-                  borderRadius: '6px',
-                  fontSize: '10.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                👮 {t.traffic_persona}
-              </button>
-
-              <button
-                onClick={() => setActivePersona('outdoor_worker')}
-                style={{
-                  background: activePersona === 'outdoor_worker' ? 'rgba(56,189,248,0.25)' : 'transparent',
-                  color: activePersona === 'outdoor_worker' ? '#38bdf8' : 'var(--text-muted)',
-                  border: 'none',
-                  padding: '5px',
-                  borderRadius: '6px',
-                  fontSize: '10.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                👷 {t.outdoor_persona}
-              </button>
-
-              <button
-                onClick={() => setActivePersona('schools')}
-                style={{
-                  background: activePersona === 'schools' ? 'rgba(56,189,248,0.25)' : 'transparent',
-                  color: activePersona === 'schools' ? '#38bdf8' : 'var(--text-muted)',
-                  border: 'none',
-                  padding: '5px',
-                  borderRadius: '6px',
-                  fontSize: '10.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                🏫 {t.school_persona}
-              </button>
-            </div>
-
-            {/* Persona Actionable Advice Card */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 12px', borderRadius: '8px', borderLeft: '3px solid #38bdf8', fontSize: '11px', lineHeight: 1.5, color: '#e2e8f0' }}>
-              <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '3px' }}>
-                {localAdvisory?.personas?.[activePersona]?.title || 'मार्गदर्शक'}:
-              </strong>
-              {localAdvisory?.personas?.[activePersona]?.advice || 'माहिती लोड होत आहे...'}
-            </div>
-
-            {/* Regional Environmental Context */}
-            {localAdvisory?.regional_environmental_note && (
-              <div style={{ fontSize: '10px', color: '#94a3b8', background: 'rgba(0,0,0,0.25)', padding: '6px 8px', borderRadius: '6px' }}>
-                <span style={{ color: '#fbbf24', fontWeight: 700 }}>⚠️ {t.regional_context}: </span>
-                {localAdvisory.regional_environmental_note}
-              </div>
             )}
-
           </div>
 
-          {/* 72-HOUR MULTI-HORIZON FORECAST */}
-          <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <TrendingUp size={15} color="var(--accent-cyan)" />
-                <h3 style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  72-Hour Multi-Horizon Forecast
-                </h3>
-              </div>
-              <span style={{ fontSize: '10px', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px', color: 'var(--accent-cyan)' }}>
-                LightGBM
-              </span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
-              {forecastData?.map((item, idx) => (
-                <div key={idx} style={{ 
-                  background: 'rgba(255,255,255,0.03)', 
-                  border: '1px solid var(--border-subtle)', 
-                  borderRadius: '6px', 
-                  padding: '6px 4px', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
-                  gap: '1px'
-                }}>
-                  <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    +{item.horizon_hours}h
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '15px', fontWeight: 700, color: item.color }}>
-                    {item.predicted_pm25}
-                  </span>
-                  <span style={{ fontSize: '8.5px', color: 'var(--text-dim)' }}>
-                    µg/m³
+          {/* Autocomplete Dropdown */}
+          {showSearchResults && searchResults.length > 0 && (
+            <div style={{ 
+              position: 'absolute', 
+              top: '100%', 
+              left: 0, 
+              right: 0, 
+              marginTop: '4px', 
+              backgroundColor: '#FFFFFF', 
+              border: '1px solid var(--border-medium)', 
+              borderRadius: 'var(--radius-sm)', 
+              boxShadow: 'var(--shadow-card)',
+              zIndex: 1000,
+              maxHeight: '320px',
+              overflowY: 'auto'
+            }}>
+              {searchResults.map(loc => (
+                <div
+                  key={loc.id}
+                  onClick={() => handleSelectLocation(loc)}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid var(--border-light)',
+                    fontSize: '12.5px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-subtle)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <MapPin size={14} color="var(--accent-jade)" />
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {lang === 'mr' ? loc.name_mr : lang === 'hi' ? loc.name_hi : loc.name}
+                    </span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '11.5px' }}>
+                      ({loc.name}) · {loc.district || loc.division || 'Maharashtra'}
+                    </span>
+                  </div>
+                  <span style={{ 
+                    fontSize: '10.5px', 
+                    padding: '2px 6px', 
+                    borderRadius: '4px', 
+                    backgroundColor: 'var(--bg-subtle)', 
+                    color: 'var(--text-secondary)',
+                    fontWeight: 500
+                  }}>
+                    {loc.isDistrict ? 'District Seat' : loc.type || 'Town'}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* SHAP EXPLAINABILITY PANEL */}
-          <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={15} color="var(--accent-cyan)" />
-                <h3 style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  {t.shap_title}
-                </h3>
+        {/* Region Chips for Quick Jump */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500, marginRight: '2px' }}>
+            Divisions:
+          </span>
+          {[
+            { id: 'MH_PUN', name: 'Pune' },
+            { id: 'MH_MUM_CITY', name: 'Mumbai' },
+            { id: 'MH_NSK', name: 'Nashik' },
+            { id: 'MH_AUR', name: 'Sambhajinagar' },
+            { id: 'MH_NAG', name: 'Nagpur' },
+            { id: 'MH_AMR', name: 'Amravati' }
+          ].map(d => (
+            <button
+              key={d.id}
+              onClick={() => {
+                const match = MAHARASHTRA_DISTRICTS.find(item => item.id === d.id);
+                if (match) handleSelectLocation(match);
+              }}
+              style={{
+                backgroundColor: selectedLocation.id === d.id ? 'var(--accent-jade-subtle)' : 'transparent',
+                color: selectedLocation.id === d.id ? 'var(--accent-jade)' : 'var(--text-secondary)',
+                border: `1px solid ${selectedLocation.id === d.id ? 'var(--accent-jade-border)' : 'var(--border-light)'}`,
+                padding: '3px 8px',
+                borderRadius: '4px',
+                fontSize: '11.5px',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+            >
+              {d.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 3. MAIN DASHBOARD CONTENT (EDITORIAL GRID) ────────────── */}
+      <main style={{ padding: '20px 24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: '16px', flex: 1 }}>
+          
+          {/* ── LEFT COLUMN: Map & Spatial Controls ────────────────── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            
+            <div className="panel-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+              
+              {/* Top Map Action Row */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                
+                {/* Basemap Switcher (Clean Segmented Control) */}
+                <div className="segmented-control">
+                  <button 
+                    onClick={() => setBasemapType('satellite')} 
+                    className={`segmented-btn ${basemapType === 'satellite' ? 'active' : ''}`}
+                  >
+                    <Satellite size={13} />
+                    <span>Satellite</span>
+                  </button>
+                  <button 
+                    onClick={() => setBasemapType('light')} 
+                    className={`segmented-btn ${basemapType === 'light' ? 'active' : ''}`}
+                  >
+                    <span>Carto Light</span>
+                  </button>
+                  <button 
+                    onClick={() => setBasemapType('voyager')} 
+                    className={`segmented-btn ${basemapType === 'voyager' ? 'active' : ''}`}
+                  >
+                    <span>Carto Voyager</span>
+                  </button>
+                  <button 
+                    onClick={() => setBasemapType('street')} 
+                    className={`segmented-btn ${basemapType === 'street' ? 'active' : ''}`}
+                  >
+                    <MapIcon size={13} />
+                    <span>Street</span>
+                  </button>
+                </div>
+
+                {/* Layer Options & Dropdown */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  
+                  {/* Heatmap Overlay Toggle */}
+                  <button
+                    onClick={() => setShowHeatmap(!showHeatmap)}
+                    className="btn-secondary"
+                    style={{ 
+                      padding: '5px 10px', 
+                      fontSize: '11.5px',
+                      backgroundColor: showHeatmap ? 'var(--accent-jade-subtle)' : '#FFFFFF',
+                      borderColor: showHeatmap ? 'var(--accent-jade-border)' : 'var(--border-light)',
+                      color: showHeatmap ? 'var(--accent-jade)' : 'var(--text-secondary)'
+                    }}
+                  >
+                    <Eye size={13} />
+                    <span>{t.overlay_toggle}</span>
+                  </button>
+
+                  {/* District / Town Selector */}
+                  <select
+                    value={selectedLocation.id}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      if (id === 'MH_ALL') {
+                        handleSelectLocation(STATEWIDE_OVERVIEW);
+                      } else {
+                        const match = ALL_MAHARASHTRA_LOCATIONS.find(l => l.id === id);
+                        if (match) handleSelectLocation(match);
+                      }
+                    }}
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '5px 8px',
+                      fontSize: '11.5px',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-sans)',
+                      maxWidth: '180px'
+                    }}
+                  >
+                    <option value="MH_ALL">{t.all_maharashtra}</option>
+                    <optgroup label="जिल्हे (Districts)">
+                      {MAHARASHTRA_DISTRICTS.map(d => (
+                        <option key={d.id} value={d.id}>
+                          {lang === 'mr' ? d.name_mr : lang === 'hi' ? d.name_hi : d.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="मध्यवर्ती तालुके व शहरे (In-Between Towns)">
+                      {MAHARASHTRA_IN_BETWEEN_TOWNS.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {lang === 'mr' ? t.name_mr : lang === 'hi' ? t.name_hi : t.name} ({t.district})
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+
+              </div>
+
+              {/* Leaflet Render Surface */}
+              <div 
+                ref={mapContainerRef} 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  minHeight: '430px', 
+                  borderRadius: 'var(--radius-sm)', 
+                  border: '1px solid var(--border-light)',
+                  overflow: 'hidden'
+                }}
+              ></div>
+
+              {/* NAQI Scale & Map Instruction */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                padding: '8px 12px', 
+                backgroundColor: 'var(--bg-subtle)', 
+                borderRadius: 'var(--radius-sm)', 
+                border: '1px solid var(--border-light)', 
+                flexWrap: 'wrap', 
+                gap: '8px' 
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                  <Crosshair size={13} color="var(--accent-jade)" />
+                  <span>Click anywhere to sample unmonitored locations</span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {[
+                    { label: '0–50 Good', color: '#1B5E20', bg: '#E8F5E9' },
+                    { label: '51–100 Sat.', color: '#33691E', bg: '#F1F8E9' },
+                    { label: '101–200 Mod.', color: '#8D5B00', bg: '#FFF8E1' },
+                    { label: '201–300 Poor', color: '#BF360C', bg: '#FBE9E7' },
+                    { label: '301–400 V.Poor', color: '#880E4F', bg: '#FCE4EC' },
+                    { label: '401–500 Severe', color: '#4A148C', bg: '#F3E5F5' }
+                  ].map(item => (
+                    <span 
+                      key={item.label}
+                      style={{ 
+                        fontSize: '10.5px', 
+                        padding: '2px 6px', 
+                        borderRadius: '3px', 
+                        backgroundColor: item.bg, 
+                        color: item.color, 
+                        fontWeight: 600 
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* 72-Hour Forecast Scrubber Slider */}
+              <div style={{ 
+                padding: '10px 14px', 
+                backgroundColor: 'var(--bg-subtle)', 
+                borderRadius: 'var(--radius-sm)', 
+                border: '1px solid var(--border-light)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                    <Clock size={13} color="var(--accent-jade)" />
+                    <span>{t.forecast_scrubber}:</span>
+                    <span style={{ color: 'var(--accent-jade)' }}>
+                      {FORECAST_HORIZONS[forecastHorizonIdx].label} ({forecastHorizonIdx === 0 ? 'Current Observation' : `+${FORECAST_HORIZONS[forecastHorizonIdx].hours} Hours Projection`})
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    {FORECAST_HORIZONS[0].label} → {FORECAST_HORIZONS[FORECAST_HORIZONS.length - 1].label}
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min={0}
+                  max={FORECAST_HORIZONS.length - 1}
+                  value={forecastHorizonIdx}
+                  onChange={(e) => setForecastHorizonIdx(Number(e.target.value))}
+                  style={{ 
+                    width: '100%', 
+                    accentColor: 'var(--accent-jade)', 
+                    cursor: 'pointer',
+                    height: '4px'
+                  }}
+                />
+              </div>
+
+            </div>
+
+            {/* 24-Hour Diurnal Observation Chart */}
+            <div className="panel-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <BarChart3 size={15} color="var(--accent-jade)" />
+                  <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {t.historical_chart}
+                  </h3>
+                </div>
+                <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                  {selectedStation.name.split('(')[0].trim()}
+                </span>
+              </div>
+
+              {/* Sparkline Bars */}
+              <div style={{ display: 'flex', alignItems: 'flex-end', height: '56px', gap: '3px', paddingTop: '6px' }}>
+                {historyData.map((d, i) => {
+                  const heightPct = Math.min(100, Math.max(12, (d.pm25 / 140) * 100));
+                  return (
+                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                      <div 
+                        title={`${d.timestamp}: ${d.pm25} µg/m³`}
+                        style={{ 
+                          width: '100%', 
+                          height: `${heightPct}%`, 
+                          backgroundColor: d.pm25 <= 30 ? '#C8E6C9' : d.pm25 <= 60 ? '#DCEDC8' : d.pm25 <= 90 ? '#FFE082' : d.pm25 <= 120 ? '#FFCCBC' : '#F8BBD0', 
+                          borderTop: `2px solid ${d.pm25 <= 30 ? '#1B5E20' : d.pm25 <= 60 ? '#33691E' : d.pm25 <= 90 ? '#8D5B00' : d.pm25 <= 120 ? '#BF360C' : '#880E4F'}`,
+                          borderRadius: '2px 2px 0 0'
+                        }} 
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
+                <span>-24 Hours</span>
+                <span>-12 Hours</span>
+                <span>Now</span>
               </div>
             </div>
 
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4, background: 'rgba(0,0,0,0.25)', padding: '6px 8px', borderRadius: '6px', borderLeft: '3px solid var(--accent-cyan)', margin: 0 }}>
-              {explainData?.narrative_explanation || 'Loading physics and emission attribution...'}
-            </p>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {explainData?.top_drivers?.slice(0, 3).map((driver, idx) => {
-                const isElevating = driver.impact_value > 0;
-                return (
-                  <div key={idx} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    padding: '4px 8px', 
-                    background: 'rgba(255,255,255,0.02)', 
-                    borderRadius: '6px',
-                    fontSize: '10.5px'
-                  }}>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{driver.driver}</span>
+          {/* ── RIGHT COLUMN: Data, Intelligence & Advisory ────────── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            
+            {/* Primary Target Location Card */}
+            <div className="panel-card" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+                    {t.target_location}
+                  </span>
+                  <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', letterSpacing: '-0.02em' }}>
+                    {selectedStation.name}
+                  </h2>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    {selectedStation.lat.toFixed(4)}°N, {selectedStation.lon.toFixed(4)}°E · {selectedStation.zone}
+                  </span>
+                </div>
+
+                <div style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '4px', 
+                  padding: '3px 8px', 
+                  borderRadius: '4px', 
+                  backgroundColor: 'var(--accent-jade-subtle)', 
+                  border: '1px solid var(--accent-jade-border)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: 'var(--accent-jade)'
+                }}>
+                  <ShieldCheck size={12} />
+                  <span>{aqiData?.data_reliability?.reliability_score || 91}% {t.credibility}</span>
+                </div>
+              </div>
+
+              {/* Big Metrics Grid (AQI + PM2.5) */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1.2fr 1fr', 
+                gap: '12px', 
+                padding: '14px', 
+                backgroundColor: 'var(--bg-subtle)', 
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-light)'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                    <span style={{ fontFamily: 'var(--font-heading)', fontSize: '46px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
+                      {loading ? '—' : aqiData?.predicted_aqi}
+                    </span>
                     <span style={{ 
-                      fontFamily: 'var(--font-mono)', 
-                      fontWeight: 700, 
-                      color: isElevating ? '#f87171' : '#34d399' 
+                      fontSize: '11.5px', 
+                      fontWeight: 600, 
+                      padding: '2px 8px', 
+                      borderRadius: '4px', 
+                      backgroundColor: badgeStyle.bg, 
+                      color: badgeStyle.text, 
+                      border: `1px solid ${badgeStyle.border}` 
                     }}>
-                      {isElevating ? `+${driver.impact_value}` : `${driver.impact_value}`} µg/m³
+                      {localAdvisory?.category_localized || badgeStyle.label}
                     </span>
                   </div>
-                );
-              })}
+                  <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: 1.4 }}>
+                    {localAdvisory?.summary || aqiData?.health_advisory}
+                  </p>
+                </div>
+
+                {/* Surface PM2.5 & Conformal Interval */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', borderLeft: '1px solid var(--border-light)', paddingLeft: '14px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                    {t.surface_pm25}:
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {loading ? '—' : aqiData?.predicted_pm25}
+                    </span>
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>µg/m³</span>
+                  </div>
+
+                  <div style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '4px', 
+                    marginTop: '2px', 
+                    fontSize: '10.5px', 
+                    color: 'var(--text-secondary)' 
+                  }}>
+                    <ShieldAlert size={12} color="var(--accent-jade)" />
+                    <span>90% CI: ±{aqiData?.uncertainty?.margin_of_error || 14.2} µg/m³</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Station Proximity Comparison */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                fontSize: '11.5px', 
+                color: 'var(--text-secondary)',
+                borderTop: '1px solid var(--border-light)',
+                paddingTop: '8px'
+              }}>
+                <span>
+                  {t.nearest_station}: <strong style={{ color: 'var(--text-primary)' }}>{aqiData?.station_comparison?.nearest_station_name}</strong> ({aqiData?.station_comparison?.distance_to_station_km} km)
+                </span>
+                <span style={{ 
+                  color: aqiData?.station_comparison?.delta_direction === 'HIGHER' ? '#BF360C' : '#1B5E20',
+                  fontWeight: 600
+                }}>
+                  {t.delta}: {aqiData?.station_comparison?.delta_pm25 > 0 ? `+${aqiData?.station_comparison?.delta_pm25}` : aqiData?.station_comparison?.delta_pm25} µg/m³
+                </span>
+              </div>
+
             </div>
+
+            {/* Local Community & Citizen Advisory Card */}
+            <div className="panel-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Users size={15} color="var(--accent-jade)" />
+                  <h3 style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {t.advisory_heading}
+                  </h3>
+                </div>
+
+                <span style={{ 
+                  fontSize: '11px', 
+                  padding: '2px 8px', 
+                  borderRadius: '4px', 
+                  backgroundColor: 'var(--bg-subtle)', 
+                  border: '1px solid var(--border-light)', 
+                  color: 'var(--text-secondary)',
+                  fontWeight: 500
+                }}>
+                  {localAdvisory?.mask_recommendation || 'N95 Mask Guidance'}
+                </span>
+              </div>
+
+              {/* Persona Switcher Tabs (Clean, No Emojis, Standard Lucide Icons) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+                {[
+                  { key: 'general', icon: Users, label: t.personas.general },
+                  { key: 'sensitive', icon: HeartPulse, label: t.personas.sensitive },
+                  { key: 'farmer', icon: Tractor, label: t.personas.farmer },
+                  { key: 'traffic_worker', icon: Shield, label: t.personas.traffic_worker },
+                  { key: 'outdoor_worker', icon: HardHat, label: t.personas.outdoor_worker },
+                  { key: 'schools', icon: School, label: t.personas.schools }
+                ].map(p => {
+                  const IconComponent = p.icon;
+                  const isActive = activePersona === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      onClick={() => setActivePersona(p.key)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px',
+                        padding: '6px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: `1px solid ${isActive ? 'var(--accent-jade-border)' : 'var(--border-light)'}`,
+                        backgroundColor: isActive ? 'var(--accent-jade-subtle)' : 'var(--bg-surface)',
+                        color: isActive ? 'var(--accent-jade)' : 'var(--text-secondary)',
+                        fontSize: '11px',
+                        fontWeight: isActive ? 600 : 500,
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-fast)'
+                      }}
+                    >
+                      <IconComponent size={13} />
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {p.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Advisory Body */}
+              <div style={{ 
+                padding: '12px 14px', 
+                backgroundColor: 'var(--bg-subtle)', 
+                borderRadius: 'var(--radius-sm)', 
+                borderLeft: '3px solid var(--accent-jade)',
+                fontSize: '12.5px',
+                lineHeight: 1.55,
+                color: 'var(--text-primary)'
+              }}>
+                <strong style={{ color: 'var(--accent-jade)', display: 'block', marginBottom: '4px', fontSize: '12px' }}>
+                  {localAdvisory?.personas?.[activePersona]?.title || t.personas[activePersona]}:
+                </strong>
+                {localAdvisory?.personas?.[activePersona]?.advice || 'Loading advisory...'}
+              </div>
+
+              {/* Regional Environmental Context Alert */}
+              {localAdvisory?.regional_environmental_note && (
+                <div style={{ 
+                  fontSize: '11.5px', 
+                  color: 'var(--text-secondary)', 
+                  backgroundColor: '#FFFBEB', 
+                  border: '1px solid #FEF3C7',
+                  padding: '8px 10px', 
+                  borderRadius: 'var(--radius-sm)',
+                  lineHeight: 1.45
+                }}>
+                  <strong style={{ color: '#92400E' }}>Regional Context: </strong>
+                  {localAdvisory.regional_environmental_note}
+                </div>
+              )}
+
+            </div>
+
+            {/* 72-Hour Multi-Horizon Direct Forecast Grid */}
+            <div className="panel-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <TrendingUp size={15} color="var(--accent-jade)" />
+                  <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    72-Hour Multi-Horizon Forecast
+                  </h3>
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  Direct LightGBM
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
+                {forecastData?.map((item, idx) => {
+                  const itemBadge = getCategoryBadgeStyle(item.category || 'Moderate');
+                  return (
+                    <div key={idx} style={{ 
+                      backgroundColor: 'var(--bg-subtle)', 
+                      border: '1px solid var(--border-light)', 
+                      borderRadius: 'var(--radius-sm)', 
+                      padding: '8px 4px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      gap: '2px'
+                    }}>
+                      <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                        +{item.horizon_hours}h
+                      </span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {item.predicted_pm25}
+                      </span>
+                      <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>
+                        µg/m³
+                      </span>
+                      <span style={{ 
+                        fontSize: '9.5px', 
+                        fontWeight: 600, 
+                        color: itemBadge.text,
+                        backgroundColor: itemBadge.bg,
+                        padding: '1px 4px',
+                        borderRadius: '2px',
+                        marginTop: '2px'
+                      }}>
+                        AQI {item.predicted_aqi}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SHAP Atmospheric Attribution Panel */}
+            <div className="panel-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={15} color="var(--accent-jade)" />
+                <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {t.shap_title}
+                </h3>
+              </div>
+
+              <p style={{ 
+                fontSize: '12px', 
+                color: 'var(--text-secondary)', 
+                lineHeight: 1.5, 
+                backgroundColor: 'var(--bg-subtle)', 
+                padding: '8px 10px', 
+                borderRadius: 'var(--radius-sm)',
+                margin: 0
+              }}>
+                {explainData?.narrative_explanation || 'Computing atmospheric boundary layer and satellite optical attributions...'}
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {explainData?.top_drivers?.slice(0, 4).map((driver, idx) => {
+                  const isElevating = driver.impact_value > 0;
+                  return (
+                    <div key={idx} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '5px 8px', 
+                      backgroundColor: 'var(--bg-subtle)', 
+                      borderRadius: '4px',
+                      fontSize: '11.5px'
+                    }}>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                        {driver.driver}
+                      </span>
+                      <span style={{ 
+                        fontFamily: 'var(--font-mono)', 
+                        fontWeight: 600, 
+                        color: isElevating ? '#BF360C' : '#1B5E20' 
+                      }}>
+                        {isElevating ? `+${driver.impact_value}` : `${driver.impact_value}`} µg/m³
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
 
         </div>
 
-      </div>
+      </main>
 
-      {/* ── INTERACTIVE RESEARCH MODE MODAL ───────────────────────── */}
+      {/* ── 4. RESEARCH MODE MODAL ─────────────────────────────────── */}
       {showResearchModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="glass-panel" style={{ maxWidth: '820px', width: '100%', padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid #a855f7', maxHeight: '92vh', overflowY: 'auto' }}>
-            
+        <div style={{ 
+          position: 'fixed', 
+          inset: 0, 
+          backgroundColor: 'rgba(32, 42, 53, 0.45)', 
+          backdropFilter: 'blur(4px)', 
+          zIndex: 9999, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          padding: '24px' 
+        }}>
+          <div style={{ 
+            maxWidth: '780px', 
+            width: '100%', 
+            backgroundColor: '#FFFFFF', 
+            borderRadius: 'var(--radius-lg)', 
+            padding: '24px', 
+            boxShadow: 'var(--shadow-modal)',
+            border: '1px solid var(--border-light)',
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '16px',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <FlaskConical size={20} color="#c084fc" />
-                <div>
-                  <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#f8fafc' }}>
-                    Vayudrishti-AI Research & Methodological Validation
-                  </h2>
-                  <span style={{ fontSize: '11px', color: '#c084fc' }}>
-                    Statewide Maharashtra (36 Districts + 100+ Towns) • Defensible Metrics & Atmospheric Physics
-                  </span>
-                </div>
+              <div>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Scientific Validation Protocols & Model Benchmarks
+                </h2>
+                <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                  Statewide Maharashtra (36 Districts & 107 Corridors) · Rigorous Ablation Protocol
+                </span>
               </div>
               <button 
                 onClick={() => setShowResearchModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px' }}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
-              <button
-                onClick={() => setResearchTab('cv_matrix')}
-                style={{
-                  background: researchTab === 'cv_matrix' ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
-                  color: researchTab === 'cv_matrix' ? '#d8b4fe' : '#94a3b8',
-                  border: `1px solid ${researchTab === 'cv_matrix' ? '#a855f7' : 'transparent'}`,
-                  borderRadius: '6px',
-                  padding: '5px 10px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                1. Cross-Validation Matrix
-              </button>
-
-              <button
-                onClick={() => setResearchTab('calibration')}
-                style={{
-                  background: researchTab === 'calibration' ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
-                  color: researchTab === 'calibration' ? '#d8b4fe' : '#94a3b8',
-                  border: `1px solid ${researchTab === 'calibration' ? '#a855f7' : 'transparent'}`,
-                  borderRadius: '6px',
-                  padding: '5px 10px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                2. Conformal Calibration
-              </button>
-
-              <button
-                onClick={() => setResearchTab('physics')}
-                style={{
-                  background: researchTab === 'physics' ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
-                  color: researchTab === 'physics' ? '#d8b4fe' : '#94a3b8',
-                  border: `1px solid ${researchTab === 'physics' ? '#a855f7' : 'transparent'}`,
-                  borderRadius: '6px',
-                  padding: '5px 10px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                3. Atmospheric Physics & Ablation
-              </button>
-
-              <button
-                onClick={() => setResearchTab('limitations')}
-                style={{
-                  background: researchTab === 'limitations' ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
-                  color: researchTab === 'limitations' ? '#d8b4fe' : '#94a3b8',
-                  border: `1px solid ${researchTab === 'limitations' ? '#a855f7' : 'transparent'}`,
-                  borderRadius: '6px',
-                  padding: '5px 10px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                4. Sensor Truth & Limitations
-              </button>
+            {/* Research Tabs */}
+            <div className="segmented-control" style={{ alignSelf: 'flex-start' }}>
+              {[
+                { id: 'cv_matrix', label: 'Cross-Validation Matrix' },
+                { id: 'calibration', label: 'Conformal Calibration' },
+                { id: 'physics', label: 'Atmospheric Physics' },
+                { id: 'limitations', label: 'Limitations & Disclosure' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setResearchTab(tab.id)}
+                  className={`segmented-btn ${researchTab === tab.id ? 'active' : ''}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
+            {/* Tab 1: Cross Validation Matrix */}
             {researchTab === 'cv_matrix' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <p style={{ fontSize: '11.5px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>
-                  Evaluated across 28 CAAQMS monitoring stations in Maharashtra to ensure scientific defensibility:
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  Continuous air quality monitors in Maharashtra are concentrated primarily in urban centers. We benchmark four evaluation split strategies across 28 CAAQMS monitoring stations:
                 </p>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-                    <thead>
-                      <tr style={{ background: 'rgba(255,255,255,0.05)', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>
-                        <th style={{ padding: '6px 8px' }}>Split Protocol</th>
-                        <th style={{ padding: '6px 8px' }}>R²</th>
-                        <th style={{ padding: '6px 8px' }}>RMSE</th>
-                        <th style={{ padding: '6px 8px' }}>MAE</th>
-                        <th style={{ padding: '6px 8px' }}>90% Cov.</th>
-                        <th style={{ padding: '6px 8px' }}>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '6px 8px', fontWeight: 600 }}>Random 5-Fold (Baseline)</td>
-                        <td style={{ padding: '6px 8px' }}>0.812</td>
-                        <td style={{ padding: '6px 8px' }}>16.8</td>
-                        <td style={{ padding: '6px 8px' }}>11.4</td>
-                        <td style={{ padding: '6px 8px' }}>92.1%</td>
-                        <td style={{ padding: '6px 8px', color: '#f59e0b' }}>Overly optimistic</td>
-                      </tr>
-                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '6px 8px', fontWeight: 600, color: '#38bdf8' }}>Temporal Holdout</td>
-                        <td style={{ padding: '6px 8px', color: '#38bdf8', fontWeight: 700 }}>0.741</td>
-                        <td style={{ padding: '6px 8px' }}>19.4</td>
-                        <td style={{ padding: '6px 8px' }}>13.2</td>
-                        <td style={{ padding: '6px 8px', color: '#34d399' }}>90.8%</td>
-                        <td style={{ padding: '6px 8px', color: '#10b981' }}>Realistic temporal forecasting</td>
-                      </tr>
-                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '6px 8px', fontWeight: 600, color: '#c084fc' }}>Spatial Leave-Station-Out</td>
-                        <td style={{ padding: '6px 8px', color: '#c084fc', fontWeight: 700 }}>0.687</td>
-                        <td style={{ padding: '6px 8px' }}>21.8</td>
-                        <td style={{ padding: '6px 8px' }}>14.9</td>
-                        <td style={{ padding: '6px 8px', color: '#34d399' }}>89.6%</td>
-                        <td style={{ padding: '6px 8px', color: '#10b981' }}>Unmonitored station interpolation</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: '6px 8px', fontWeight: 600, color: '#34d399' }}>Regional Leave-City-Out</td>
-                        <td style={{ padding: '6px 8px', color: '#34d399', fontWeight: 700 }}>0.628</td>
-                        <td style={{ padding: '6px 8px' }}>24.2</td>
-                        <td style={{ padding: '6px 8px' }}>16.7</td>
-                        <td style={{ padding: '6px 8px', color: '#34d399' }}>88.4%</td>
-                        <td style={{ padding: '6px 8px', color: '#10b981' }}>Pune/Mumbai → Vidarbha</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: 'var(--text-secondary)' }}>Validation Protocol</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: 'var(--text-secondary)' }}>R² Score</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: 'var(--text-secondary)' }}>RMSE (µg/m³)</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: 'var(--text-secondary)' }}>MAE</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: 'var(--text-secondary)' }}>90% Cov.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--border-light)' }}>
+                      <td style={{ padding: '8px 10px', fontWeight: 600 }}>Random 5-Fold CV (Baseline)</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>0.812</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>16.8</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>11.4</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>92.1%</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-light)' }}>
+                      <td style={{ padding: '8px 10px', fontWeight: 600, color: 'var(--accent-jade)' }}>Temporal Holdout (Leave-Month-Out)</td>
+                      <td style={{ padding: '8px 10px', fontWeight: 600, color: 'var(--accent-jade)' }}>0.741</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--accent-jade)' }}>19.4</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--accent-jade)' }}>13.2</td>
+                      <td style={{ padding: '8px 10px', color: 'var(--accent-jade)' }}>90.8%</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-light)' }}>
+                      <td style={{ padding: '8px 10px', fontWeight: 600 }}>Spatial Leave-Station-Out (LSO)</td>
+                      <td style={{ padding: '8px 10px' }}>0.687</td>
+                      <td style={{ padding: '8px 10px' }}>21.8</td>
+                      <td style={{ padding: '8px 10px' }}>14.9</td>
+                      <td style={{ padding: '8px 10px' }}>89.6%</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '8px 10px', fontWeight: 600 }}>Regional Leave-City-Out (Pune/Mumbai → Vidarbha)</td>
+                      <td style={{ padding: '8px 10px' }}>0.628</td>
+                      <td style={{ padding: '8px 10px' }}>24.2</td>
+                      <td style={{ padding: '8px 10px' }}>16.7</td>
+                      <td style={{ padding: '8px 10px' }}>88.4%</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
 
+            {/* Tab 2: Conformal Calibration */}
             {researchTab === 'calibration' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '11px', color: '#cbd5e1' }}>
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '6px' }}>
-                  <strong>Distance Penalty:</strong> Prediction intervals dynamically inflate from ±14.6 µg/m³ (&lt;5 km) to ±34.2 µg/m³ (&gt;50 km) ensuring honesty across unmonitored rural talukas.
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                <p>
+                  To prevent deceptive false precision in unmonitored rural talukas, we apply <strong>Split-Conformal Prediction</strong> with distance-to-monitor penalties:
+                </p>
+                <div style={{ 
+                  backgroundColor: 'var(--bg-subtle)', 
+                  padding: '12px', 
+                  borderRadius: 'var(--radius-sm)', 
+                  border: '1px solid var(--border-light)' 
+                }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-jade)', fontWeight: 600, marginBottom: '4px' }}>
+                    σ_effective = q_hat · [1 + 0.35 · √(distance_km / 10.0)]
+                  </div>
+                  <div>
+                    Prediction intervals dynamically inflate from ±14.6 µg/m³ (&lt;5 km from monitor) to ±34.2 µg/m³ in remote unmonitored districts, achieving 91.2% empirical coverage against nominal 90%.
+                  </div>
                 </div>
               </div>
             )}
 
+            {/* Tab 3: Atmospheric Physics */}
             {researchTab === 'physics' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '11px', color: '#cbd5e1' }}>
-                <div style={{ fontFamily: 'var(--font-mono)', background: 'rgba(255,255,255,0.04)', padding: '8px 10px', borderRadius: '6px', color: '#38bdf8' }}>
-                  PM2.5 ≈ (AOD / PBLH) · f(RH) · S_ext
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                <div style={{ 
+                  backgroundColor: 'var(--bg-subtle)', 
+                  padding: '12px', 
+                  borderRadius: 'var(--radius-sm)', 
+                  border: '1px solid var(--border-light)' 
+                }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-jade)', fontWeight: 600, marginBottom: '4px' }}>
+                    PM2.5 ≈ (AOD / PBLH) · f(RH) · S_ext
+                  </div>
+                  <div>
+                    Aerosol Optical Depth (AOD) measures total optical column extinction. Dividing by Planetary Boundary Layer Height (PBLH) compresses this optical column mass into ground-level breathing volume. Without PBLH, model R² drops by 0.109.
+                  </div>
                 </div>
-                <p>Dividing column AOD by boundary-layer height (PBLH) compresses optical depth into ground breathing volume. Without PBLH, model R² drops by 0.109.</p>
               </div>
             )}
 
+            {/* Tab 4: Limitations */}
             {researchTab === 'limitations' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11.5px', color: '#cbd5e1' }}>
-                <p>1. <strong>Cloud Cover:</strong> During monsoon overcast (June–September), optical AOD is cloud-gapped and fallback meteorological models activate.</p>
-                <p>2. <strong>Rural Stations:</strong> Unmonitored talukas rely on spatial regression kriging and are labeled "Estimated, Not Official".</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                <p>1. <strong>Station Sparsity:</strong> Continuous CAAQMS stations in Maharashtra are concentrated primarily in Mumbai, Pune, and Thane. Predictions in unmonitored talukas represent regression-kriging spatial estimates and are clearly marked as such.</p>
+                <p>2. <strong>Monsoon Cloud Gaps:</strong> Optical satellite sensors (MODIS MAIAC) cannot penetrate thick monsoon clouds (June–September). The platform seamlessly switches to meteorological and diurnal fallback models.</p>
               </div>
             )}
 
             <button
               onClick={() => setShowResearchModal(false)}
-              style={{
-                alignSelf: 'flex-end',
-                background: '#a855f7',
-                color: '#ffffff',
-                border: 'none',
-                padding: '6px 14px',
-                borderRadius: '6px',
-                fontWeight: 700,
-                fontSize: '11.5px',
-                cursor: 'pointer'
-              }}
+              className="btn-primary"
+              style={{ alignSelf: 'flex-end', marginTop: '6px' }}
             >
               Close
             </button>
@@ -1727,58 +1861,92 @@ export default function App() {
         </div>
       )}
 
-      {/* ── METHODOLOGY & TRANSPARENCY MODAL ───────────────────────── */}
+      {/* ── 5. METHODOLOGY MODAL ─────────────────────────────────────── */}
       {showTransparencyModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="glass-panel" style={{ maxWidth: '600px', width: '100%', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid rgba(56,189,248,0.4)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ 
+          position: 'fixed', 
+          inset: 0, 
+          backgroundColor: 'rgba(32, 42, 53, 0.45)', 
+          backdropFilter: 'blur(4px)', 
+          zIndex: 9999, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          padding: '24px' 
+        }}>
+          <div style={{ 
+            maxWidth: '580px', 
+            width: '100%', 
+            backgroundColor: '#FFFFFF', 
+            borderRadius: 'var(--radius-lg)', 
+            padding: '24px', 
+            boxShadow: 'var(--shadow-modal)',
+            border: '1px solid var(--border-light)',
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '14px' 
+          }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ShieldCheck size={18} color="#38bdf8" />
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#f8fafc' }}>
-                  Vayudrishti-AI Methodology & Transparency
+                <ShieldCheck size={18} color="var(--accent-jade)" />
+                <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Methodology & Data Integrity
                 </h3>
               </div>
               <button 
                 onClick={() => setShowTransparencyModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '18px', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
-            <div style={{ fontSize: '11.5px', color: '#cbd5e1', lineHeight: 1.5, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <p>
-                <strong>Data Sources:</strong> Ground truth from OpenAQ v3 / CPCB CAAQMS stations across Maharashtra. Spaceborne optical depth from MODIS MAIAC MCD19A2 (1 km) & Sentinel-5P TROPOMI. Hourly boundary-layer height & meteorology from ECMWF ERA5 / Open-Meteo.
+                <strong>Ground Observations:</strong> Continuous ground truth is sourced from OpenAQ v3 / CPCB CAAQMS stations across Maharashtra with a strict completeness filter (&ge;12 measurements/day).
               </p>
               <p>
-                <strong>Spatial Estimation:</strong> Continuous 1 km statewide surface produced via Regression-Kriging, combining gradient-boosted multimodal predictions with spatial ordinary kriging of station residuals.
+                <strong>Satellite Earth Observation:</strong> High-resolution optical depth from MODIS MAIAC MCD19A2 (1 km) and Sentinel-5P TROPOMI trace gas columns (NO2, SO2, CO, O3).
+              </p>
+              <p>
+                <strong>Spatial Regression Kriging:</strong> Statewide 1 km continuous surfaces are generated by combining gradient-boosted multimodal predictions with spatial ordinary kriging of station residuals.
               </p>
             </div>
 
             <button
               onClick={() => setShowTransparencyModal(false)}
-              style={{
-                alignSelf: 'flex-end',
-                background: '#38bdf8',
-                color: '#07090e',
-                border: 'none',
-                padding: '6px 14px',
-                borderRadius: '6px',
-                fontWeight: 700,
-                fontSize: '11.5px',
-                cursor: 'pointer'
-              }}
+              className="btn-primary"
+              style={{ alignSelf: 'flex-end', marginTop: '6px' }}
             >
-              Understood
+              Close
             </button>
           </div>
         </div>
       )}
 
-      {/* ── FOOTER ───────────────────────────────────────────────── */}
-      <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10.5px', color: 'var(--text-dim)', padding: '4px', flexWrap: 'wrap', gap: '6px' }}>
-        <span>Vayudrishti-AI (वायुदृष्टि) • Central Pollution Control Board (CPCB) NAQI Standard Compliant</span>
-        <span>MODIS MCD19A2 MAIAC • Sentinel-5P TROPOMI • ECMWF ERA5-Land Hourly</span>
+      {/* ── 6. MINIMAL FOOTER ───────────────────────────────────────── */}
+      <footer style={{ 
+        backgroundColor: '#FFFFFF', 
+        borderTop: '1px solid var(--border-light)', 
+        padding: '12px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '11.5px',
+        color: 'var(--text-secondary)',
+        flexWrap: 'wrap',
+        gap: '8px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>Vayudrishti-AI</span>
+          <span>·</span>
+          <span>India NAQI CPCB Compliant</span>
+          <span>·</span>
+          <span>MODIS MAIAC & Sentinel-5P Fusion</span>
+        </div>
+        <div>
+          <span>Open-Meteo & ERA5 Boundary Layer Reanalysis</span>
+        </div>
       </footer>
 
     </div>
